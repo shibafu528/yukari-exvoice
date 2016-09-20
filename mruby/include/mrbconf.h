@@ -15,7 +15,7 @@
 //#define MRB_INT16
 
 /* add -DMRB_INT64 to use 64bit integer for mrb_int; conflict with MRB_INT16 */
-//#define MRB_INT64
+#define MRB_INT64
 
 /* represent mrb_value in boxed double; conflict with MRB_USE_FLOAT */
 //#define MRB_NAN_BOXING
@@ -27,7 +27,7 @@
 //#define MRB_WORD_BOXING
 
 /* string class to handle UTF-8 encoding */
-//#define MRB_UTF8_STRING
+#define MRB_UTF8_STRING
 
 /* argv max size in mrb_funcall */
 //#define MRB_FUNCALL_ARGC_MAX 16

@@ -18,6 +18,13 @@ MRuby::Build.new do |conf|
   # conf.gem 'examples/mrbgems/c_and_ruby_extension_example'
   # conf.gem :github => 'masuidrive/mrbgems-example', :checksum_hash => '76518e8aecd131d047378448ac8055fa29d974a9'
   # conf.gem :git => 'git@github.com:masuidrive/mrbgems-example.git', :branch => 'master', :options => '-v'
+  conf.gem :github => 'shibafu528/mruby-pluggaloid'
+  conf.gem :github => 'matsumoto-r/mruby-sleep'
+  conf.gem :github => 'mattn/mruby-json'
+  conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
+  conf.gem :github => 'iij/mruby-regexp-pcre'
+  conf.gem :github => 'iij/mruby-io'
+  conf.gem :github => 'iij/mruby-require'
 
   # include the default GEMs
   conf.gembox 'default'
@@ -144,3 +151,64 @@ end
 #   conf.test_runner.command = 'env'
 #
 # end
+
+MRuby::CrossBuild.new('android-armeabi') do |conf|
+
+  toolchain :android, arch: 'armeabi'
+
+  conf.gem :github => 'shibafu528/mruby-pluggaloid'
+  conf.gem :github => 'matsumoto-r/mruby-sleep'
+  conf.gem :github => 'mattn/mruby-json'
+  conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
+  conf.gem :github => 'iij/mruby-regexp-pcre'
+  conf.gem :github => 'iij/mruby-io'
+  conf.gem :github => 'iij/mruby-require'
+
+  conf.gembox 'default'
+
+end
+MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
+
+  toolchain :android, arch: 'armeabi-v7a'
+
+  conf.gem :github => 'shibafu528/mruby-pluggaloid'
+  conf.gem :github => 'matsumoto-r/mruby-sleep'
+  conf.gem :github => 'mattn/mruby-json'
+  conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
+  conf.gem :github => 'iij/mruby-regexp-pcre'
+  conf.gem :github => 'iij/mruby-io'
+  conf.gem :github => 'iij/mruby-require'
+
+  conf.gembox 'default'
+
+end
+MRuby::CrossBuild.new('android-arm64') do |conf|
+
+  toolchain :android, arch: 'arm64', platform: 'android-21'
+
+  conf.gem :github => 'shibafu528/mruby-pluggaloid'
+  conf.gem :github => 'matsumoto-r/mruby-sleep'
+  conf.gem :github => 'mattn/mruby-json'
+  conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
+  conf.gem :github => 'iij/mruby-regexp-pcre'
+  conf.gem :github => 'iij/mruby-io'
+  conf.gem :github => 'iij/mruby-require'
+
+  conf.gembox 'default'
+
+end
+MRuby::CrossBuild.new('android-x86') do |conf|
+
+  toolchain :android, arch: 'x86'
+
+  conf.gem :github => 'shibafu528/mruby-pluggaloid'
+  conf.gem :github => 'matsumoto-r/mruby-sleep'
+  conf.gem :github => 'mattn/mruby-json'
+  conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
+  conf.gem :github => 'iij/mruby-regexp-pcre'
+  conf.gem :github => 'iij/mruby-io'
+  conf.gem :github => 'iij/mruby-require'
+
+  conf.gembox 'default'
+
+end
