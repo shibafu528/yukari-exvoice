@@ -186,6 +186,10 @@ Set ANDROID_NDK_HOME environment variable or set :ndk_home parameter
     case RUBY_PLATFORM
     when /cygwin|mswin|mingw|bccwin|wince|emx/i
       'windows'
+    when /x86_64-msys/i
+      'windows-x86_64'
+    when /msys/i
+      'windows-x86'
     when /x86_64-darwin/i
       'darwin-x86_64'
     when /darwin/i
