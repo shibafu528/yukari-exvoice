@@ -56,3 +56,50 @@ model {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
 }
+
+ext {
+    mrubyDir = 'mruby'
+    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
+        ndkDir = System.getenv('ANDROID_NDK_HOME').replaceFirst('^([a-zA-Z]):', '/$1').replace("\\", "/")
+    } else {
+        ndkDir = System.getenv('ANDROID_NDK_HOME')
+    }
+}
+
+task mrubyBuild(type: Exec) {
+    workingDir mrubyDir
+    environment 'ANDROID_NDK_HOME', ndkDir
+    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
+        commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake -v'
+    } else {
+        commandLine 'rake', '-v'
+    }
+}
+
+task mrubyClean(type: Exec) {
+    workingDir mrubyDir
+    environment 'ANDROID_NDK_HOME', ndkDir
+    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
+        commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake clean'
+    } else {
+        commandLine 'rake', 'clean'
+    }
+}
+
+task mrubyDeepClean(type: Exec) {
+    workingDir mrubyDir
+    environment 'ANDROID_NDK_HOME', ndkDir
+    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
+        commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin/usr/bin"; rake deep_clean'
+    } else {
+        commandLine 'rake', 'deep_clean'
+    }
+}
+
+tasks.whenObjectAdded { task ->
+    if (task.name.startsWith("compileExvoice")) {
+        task.dependsOn mrubyBuild
+    }
+}
+
+clean.dependsOn mrubyClean
