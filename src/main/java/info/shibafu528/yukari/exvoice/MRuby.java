@@ -17,6 +17,7 @@ public class MRuby {
         System.loadLibrary("exvoice");
     }
 
+    private final Object mutex = new Object();
     private long mrubyInstancePointer;
     private Context context;
     private AssetManager assetManager;
@@ -58,7 +59,9 @@ public class MRuby {
      * @param echo 入力をLogcat上にエコーします
      */
     public void loadString(String code, boolean echo) {
-        n_loadString(mrubyInstancePointer, code, echo);
+        synchronized (mutex) {
+            n_loadString(mrubyInstancePointer, code, echo);
+        }
     }
 
     /**
@@ -67,7 +70,9 @@ public class MRuby {
      * @return メソッドの返り値
      */
     public Object callTopLevelFunc(String name) {
-        return n_callTopLevelFunc(mrubyInstancePointer, name);
+        synchronized (mutex) {
+            return n_callTopLevelFunc(mrubyInstancePointer, name);
+        }
     }
 
     /**
@@ -100,6 +105,10 @@ public class MRuby {
         } else {
             Log.d("exvoice(Java)", value);
         }
+    }
+
+    /*package*/ Object getMutex() {
+        return mutex;
     }
 
     /*package*/ long getMRubyInstancePointer() {

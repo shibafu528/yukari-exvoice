@@ -34,7 +34,9 @@ public class ProcWrapper {
      * @exception MRubyException MRuby上で例外が発生した場合、この例外でラップされます。
      */
     public Object execWithContext(MRuby mRuby, Object... args) {
-        return execNative(mRuby.getMRubyInstancePointer(), args);
+        synchronized (mRuby.getMutex()) {
+            return execNative(mRuby.getMRubyInstancePointer(), args);
+        }
     }
 
     public void dispose() {

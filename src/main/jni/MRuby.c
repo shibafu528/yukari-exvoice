@@ -17,6 +17,7 @@ jfieldID field_MRuby_assetManager = NULL;
 jfieldID field_MRuby_mrubyInstancePointer = NULL;
 
 jmethodID method_MRuby_getPlugin = NULL;
+jmethodID method_MRuby_getMutex = NULL;
 
 MRubyInstance *findMRubyInstance(mrb_state *mrb) {
     for (int i = 0; i < MRB_INSTANCE_STORE_SIZE; i++) {
