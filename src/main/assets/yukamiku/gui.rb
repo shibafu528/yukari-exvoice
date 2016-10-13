@@ -57,7 +57,7 @@ Plugin.create(:gtk) do
     if slug_or_instance.is_a? Symbol
       @pseudo_instances[slug_or_instance]
     else
-      @pseudo_instances[slug_or_instance.class.split('::').last.downcase]
+      @pseudo_instances[slug_or_instance.class.to_s.split('::').last.downcase.to_sym]
     end
   end
 end
