@@ -59,6 +59,7 @@ dependencies {
 
 ext {
     mrubyDir = 'mruby'
+    buildHost = 'linux' // or msys
     if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
         ndkDir = System.getenv('ANDROID_NDK_HOME').replaceFirst('^([a-zA-Z]):', '/$1').replace("\\", "/")
     } else {
@@ -68,31 +69,40 @@ ext {
 
 task mrubyBuild(type: Exec) {
     workingDir mrubyDir
-    environment 'ANDROID_NDK_HOME', ndkDir
-    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
-        commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake -v'
-    } else {
-        commandLine 'rake', '-v'
+    switch (buildHost) {
+        case 'msys':
+            environment 'ANDROID_NDK_HOME', ndkDir
+            commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake -v'
+            break
+        default:
+            commandLine 'bash', '-lc', 'rake -v'
+            break
     }
 }
 
 task mrubyClean(type: Exec) {
     workingDir mrubyDir
-    environment 'ANDROID_NDK_HOME', ndkDir
-    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
-        commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake clean'
-    } else {
-        commandLine 'rake', 'clean'
+    switch (buildHost) {
+        case 'msys':
+            environment 'ANDROID_NDK_HOME', ndkDir
+            commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake clean'
+            break
+        default:
+            commandLine 'bash', '-lc', 'rake clean'
+            break
     }
 }
 
 task mrubyDeepClean(type: Exec) {
     workingDir mrubyDir
-    environment 'ANDROID_NDK_HOME', ndkDir
-    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
-        commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin/usr/bin"; rake deep_clean'
-    } else {
-        commandLine 'rake', 'deep_clean'
+    switch (buildHost) {
+        case 'msys':
+            environment 'ANDROID_NDK_HOME', ndkDir
+            commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake deep_clean'
+            break
+        default:
+            commandLine 'bash', '-lc', 'rake deep_clean'
+            break
     }
 }
 
