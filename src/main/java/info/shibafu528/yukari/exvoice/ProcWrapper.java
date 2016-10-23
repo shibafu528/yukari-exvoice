@@ -7,12 +7,12 @@ package info.shibafu528.yukari.exvoice;
  */
 public class ProcWrapper {
 
-    private long mRubyInstancePointer;
+    private MRuby mRuby;
     private long rProcPointer;
     private boolean disposed;
 
-    /*package*/ ProcWrapper(long mRubyInstancePointer, long rProcPointer) {
-        this.mRubyInstancePointer = mRubyInstancePointer;
+    /*package*/ ProcWrapper(MRuby mRuby, long rProcPointer) {
+        this.mRuby = mRuby;
         this.rProcPointer = rProcPointer;
     }
 
@@ -23,7 +23,7 @@ public class ProcWrapper {
      * @exception MRubyException MRuby上で例外が発生した場合、この例外でラップされます。
      */
     public Object exec(Object... args) {
-        return execNative(this.mRubyInstancePointer, args);
+        return execWithContext(this.mRuby, args);
     }
 
     /**
@@ -32,16 +32,21 @@ public class ProcWrapper {
      * @param args ブロックに渡す引数
      * @return ブロックの返り値
      * @exception MRubyException MRuby上で例外が発生した場合、この例外でラップされます。
+     * @exception IllegalStateException 引数 mRuby が null、またはクローズされている場合にスローされます。
      */
     public Object execWithContext(MRuby mRuby, Object... args) {
+        if (mRuby == null || mRuby.getMRubyInstancePointer() == 0) {
+            throw new IllegalStateException("無効なMRubyインスタンスが指定されているため、実行できません。");
+        }
+
         synchronized (mRuby.getMutex()) {
             return execNative(mRuby.getMRubyInstancePointer(), args);
         }
     }
 
     public void dispose() {
-        if (!disposed) {
-            disposeNative(mRubyInstancePointer);
+        if (!disposed && mRuby != null && mRuby.getMRubyInstancePointer() != 0) {
+            disposeNative(mRuby.getMRubyInstancePointer());
             rProcPointer = 0;
             disposed = true;
         }

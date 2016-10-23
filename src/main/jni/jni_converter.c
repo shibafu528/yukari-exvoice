@@ -5,6 +5,7 @@
 #include <mruby/string.h>
 #include <mruby/proc.h>
 #include <stddef.h>
+#include "MRuby.h"
 
 static jfieldID boolean_TRUE = NULL;
 static jfieldID boolean_FALSE = NULL;
@@ -251,10 +252,10 @@ jobject convertMrbValueToJava(JNIEnv *env, mrb_state *mrb, mrb_value value) {
         case MRB_TT_PROC: {
             jclass procWrapperClass = (*env)->FindClass(env, "info/shibafu528/yukari/exvoice/ProcWrapper");
             if (procWrapper_constructor == NULL) {
-                procWrapper_constructor = (*env)->GetMethodID(env, procWrapperClass, "<init>", "(JJ)V");
+                procWrapper_constructor = (*env)->GetMethodID(env, procWrapperClass, "<init>", "(Linfo/shibafu528/yukari/exvoice/MRuby;J)V");
             }
             mrb_gc_register(mrb, value);
-            jobject object = (*env)->NewObject(env, procWrapperClass, procWrapper_constructor, (jlong) mrb, (jlong) mrb_proc_ptr(value));
+            jobject object = (*env)->NewObject(env, procWrapperClass, procWrapper_constructor, findMRubyInstance(mrb)->javaInstance, (jlong) mrb_proc_ptr(value));
 
             (*env)->DeleteLocalRef(env, procWrapperClass);
             return object;
