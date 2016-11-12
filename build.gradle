@@ -32,7 +32,7 @@ android {
             }
         }
         ndk {
-            abiFilters "armeabi", "armeabi-v7a", "arm64-v8a", "x86"
+            abiFilters "armeabi", "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
         }
     }
     buildTypes {
@@ -54,55 +54,26 @@ dependencies {
 
 ext {
     mrubyDir = 'mruby'
-    buildHost = 'linux' // or msys
-    if (System.getProperty('os.name').toLowerCase().startsWith("windows")) {
-        ndkDir = System.getenv('ANDROID_NDK_HOME').replaceFirst('^([a-zA-Z]):', '/$1').replace("\\", "/")
-    } else {
-        ndkDir = System.getenv('ANDROID_NDK_HOME')
-    }
+    mrubyConfig = '../build_config.rb'
 }
 
 task mrubyBuild(type: Exec) {
     workingDir mrubyDir
-    switch (buildHost) {
-        case 'msys':
-            environment 'ANDROID_NDK_HOME', ndkDir
-            commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake -v'
-            break
-        default:
-            commandLine 'bash', '-lc', 'rake -v'
-            break
-    }
+    commandLine 'bash', '-lc', "MRUBY_CONFIG=$mrubyConfig rake -v"
 }
 
 task mrubyClean(type: Exec) {
     workingDir mrubyDir
-    switch (buildHost) {
-        case 'msys':
-            environment 'ANDROID_NDK_HOME', ndkDir
-            commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake clean'
-            break
-        default:
-            commandLine 'bash', '-lc', 'rake clean'
-            break
-    }
+    commandLine 'bash', '-lc', "MRUBY_CONFIG=$mrubyConfig rake clean"
 }
 
 task mrubyDeepClean(type: Exec) {
     workingDir mrubyDir
-    switch (buildHost) {
-        case 'msys':
-            environment 'ANDROID_NDK_HOME', ndkDir
-            commandLine 'C:/msys64/usr/bin/bash', '-c', 'export PATH="/usr/local/bin:/usr/bin"; rake deep_clean'
-            break
-        default:
-            commandLine 'bash', '-lc', 'rake deep_clean'
-            break
-    }
+    commandLine 'bash', '-lc', "MRUBY_CONFIG=$mrubyConfig rake deep_clean"
 }
 
 tasks.whenObjectAdded { task ->
-    if (task.name.startsWith("externalNativeBuild")) {
+    if (task.name.startsWith("externalNativeBuild") && !task.name.contains("Clean")) {
         task.dependsOn mrubyBuild
     }
 }

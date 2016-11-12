@@ -4,11 +4,7 @@ cmake_minimum_required(VERSION 3.5)
 include_directories(mruby/include)
 
 # ABI -> mruby build arch
-if(${ANDROID_ABI} STREQUAL "arm64-v8a")
-    set(MRUBY_ARCH "android-arm64")
-else()
-    set(MRUBY_ARCH "android-${ANDROID_ABI}")
-endif()
+set(MRUBY_ARCH "android-${ANDROID_ABI}")
 
 link_directories(mruby/build/${MRUBY_ARCH}/lib)
 

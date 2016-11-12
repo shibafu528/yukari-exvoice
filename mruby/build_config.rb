@@ -182,7 +182,7 @@ MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
   conf.gembox 'default'
 
 end
-MRuby::CrossBuild.new('android-arm64') do |conf|
+MRuby::CrossBuild.new('android-arm64-v8a') do |conf|
 
   toolchain :android, arch: 'arm64', platform: 'android-21'
 
