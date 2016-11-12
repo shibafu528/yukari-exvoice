@@ -310,6 +310,12 @@ new_rescue(parser_state *p, node *body, node *resq, node *els)
   return list4((node*)NODE_RESCUE, body, resq, els);
 }
 
+static node*
+new_mod_rescue(parser_state *p, node *body, node *resq)
+{
+  return new_rescue(p, body, list1(list3(0, 0, resq)), 0);
+}
+
 /* (:ensure body ensure) */
 static node*
 new_ensure(parser_state *p, node *a, node *b)
@@ -1083,7 +1089,7 @@ heredoc_end(parser_state *p)
 
 %token <id>  tIDENTIFIER tFID tGVAR tIVAR tCONSTANT tCVAR tLABEL
 %token <nd>  tINTEGER tFLOAT tCHAR tXSTRING tREGEXP
-%token <nd>  tSTRING tSTRING_PART tSTRING_MID
+%token <nd>  tSTRING tSTRING_PART tSTRING_MID tLABEL_END
 %token <nd>  tNTH_REF tBACK_REF
 %token <num> tREGEXP_END
 
@@ -1091,12 +1097,12 @@ heredoc_end(parser_state *p)
 %type <nd> literal numeric cpath symbol
 %type <nd> top_compstmt top_stmts top_stmt
 %type <nd> bodystmt compstmt stmts stmt expr arg primary command command_call method_call
-%type <nd> expr_value arg_value primary_value
+%type <nd> expr_value arg_value arg_rhs primary_value
 %type <nd> if_tail opt_else case_body cases opt_rescue exc_list exc_var opt_ensure
 %type <nd> args call_args opt_call_args
 %type <nd> paren_args opt_paren_args variable
 %type <nd> command_args aref_args opt_block_arg block_arg var_ref var_lhs
-%type <nd> command_asgn mrhs superclass block_call block_command
+%type <nd> command_asgn command_rhs mrhs superclass block_call block_command
 %type <nd> f_block_optarg f_block_opt
 %type <nd> f_arglist f_args f_arg f_arg_item f_optarg f_marg f_marg_list f_margs
 %type <nd> assoc_list assocs assoc undef_list backref for_var
@@ -1300,7 +1306,7 @@ stmt            : keyword_alias fsym {p->lstate = EXPR_FNAME;} fsym
                     }
                 | stmt modifier_rescue stmt
                     {
-                      $$ = new_rescue(p, $1, list1(list3(0, 0, $3)), 0);
+                      $$ = new_mod_rescue(p, $1, $3);
                     }
                 | keyword_END '{' compstmt '}'
                     {
@@ -1311,36 +1317,6 @@ stmt            : keyword_alias fsym {p->lstate = EXPR_FNAME;} fsym
                 | mlhs '=' command_call
                     {
                       $$ = new_masgn(p, $1, $3);
-                    }
-                | var_lhs tOP_ASGN command_call
-                    {
-                      $$ = new_op_asgn(p, $1, $2, $3);
-                    }
-                | primary_value '[' opt_call_args rbracket tOP_ASGN command_call
-                    {
-                      $$ = new_op_asgn(p, new_call(p, $1, intern("[]",2), $3, '.'), $5, $6);
-                    }
-                | primary_value call_op tIDENTIFIER tOP_ASGN command_call
-                    {
-                      $$ = new_op_asgn(p, new_call(p, $1, $3, 0, $2), $4, $5);
-                    }
-                | primary_value call_op tCONSTANT tOP_ASGN command_call
-                    {
-                      $$ = new_op_asgn(p, new_call(p, $1, $3, 0, $2), $4, $5);
-                    }
-                | primary_value tCOLON2 tCONSTANT tOP_ASGN command_call
-                    {
-                      yyerror(p, "constant re-assignment");
-                      $$ = 0;
-                    }
-                | primary_value tCOLON2 tIDENTIFIER tOP_ASGN command_call
-                    {
-                      $$ = new_op_asgn(p, new_call(p, $1, $3, 0, tCOLON2), $4, $5);
-                    }
-                | backref tOP_ASGN command_call
-                    {
-                      backref_error(p, $1);
-                      $$ = new_begin(p, 0);
                     }
                 | lhs '=' mrhs
                     {
@@ -1357,14 +1333,48 @@ stmt            : keyword_alias fsym {p->lstate = EXPR_FNAME;} fsym
                 | expr
                 ;
 
-command_asgn    : lhs '=' command_call
+command_asgn    : lhs '=' command_rhs
                     {
                       $$ = new_asgn(p, $1, $3);
                     }
-                | lhs '=' command_asgn
+                | var_lhs tOP_ASGN command_rhs
                     {
-                      $$ = new_asgn(p, $1, $3);
+                      $$ = new_op_asgn(p, $1, $2, $3);
                     }
+                | primary_value '[' opt_call_args rbracket tOP_ASGN command_rhs
+                    {
+                      $$ = new_op_asgn(p, new_call(p, $1, intern("[]",2), $3, '.'), $5, $6);
+                    }
+                | primary_value call_op tIDENTIFIER tOP_ASGN command_rhs
+                    {
+                      $$ = new_op_asgn(p, new_call(p, $1, $3, 0, $2), $4, $5);
+                    }
+                | primary_value call_op tCONSTANT tOP_ASGN command_rhs
+                    {
+                      $$ = new_op_asgn(p, new_call(p, $1, $3, 0, $2), $4, $5);
+                    }
+                | primary_value tCOLON2 tCONSTANT tOP_ASGN command_call
+                    {
+                      yyerror(p, "constant re-assignment");
+                      $$ = 0;
+                    }
+                | primary_value tCOLON2 tIDENTIFIER tOP_ASGN command_rhs
+                    {
+                      $$ = new_op_asgn(p, new_call(p, $1, $3, 0, tCOLON2), $4, $5);
+                    }
+                | backref tOP_ASGN command_rhs
+                    {
+                      backref_error(p, $1);
+                      $$ = new_begin(p, 0);
+                    }
+		;
+
+command_rhs     : command_call   %prec tOP_ASGN
+                | command_call modifier_rescue stmt
+                    {
+                      $$ = new_mod_rescue(p, $1, $3);
+                    }
+                | command_asgn
                 ;
 
 
@@ -1724,49 +1734,41 @@ reswords        : keyword__LINE__ | keyword__FILE__ | keyword__ENCODING__
                 | keyword_while | keyword_until
                 ;
 
-arg             : lhs '=' arg
+arg             : lhs '=' arg_rhs
                     {
                       $$ = new_asgn(p, $1, $3);
                     }
-                | lhs '=' arg modifier_rescue arg
-                    {
-                      $$ = new_asgn(p, $1, new_rescue(p, $3, list1(list3(0, 0, $5)), 0));
-                    }
-                | var_lhs tOP_ASGN arg
+                | var_lhs tOP_ASGN arg_rhs
                     {
                       $$ = new_op_asgn(p, $1, $2, $3);
                     }
-                | var_lhs tOP_ASGN arg modifier_rescue arg
-                    {
-                      $$ = new_op_asgn(p, $1, $2, new_rescue(p, $3, list1(list3(0, 0, $5)), 0));
-                    }
-                | primary_value '[' opt_call_args rbracket tOP_ASGN arg
+                | primary_value '[' opt_call_args rbracket tOP_ASGN arg_rhs
                     {
                       $$ = new_op_asgn(p, new_call(p, $1, intern("[]",2), $3, '.'), $5, $6);
                     }
-                | primary_value call_op tIDENTIFIER tOP_ASGN arg
+                | primary_value call_op tIDENTIFIER tOP_ASGN arg_rhs
                     {
                       $$ = new_op_asgn(p, new_call(p, $1, $3, 0, $2), $4, $5);
                     }
-                | primary_value call_op tCONSTANT tOP_ASGN arg
+                | primary_value call_op tCONSTANT tOP_ASGN arg_rhs
                     {
                       $$ = new_op_asgn(p, new_call(p, $1, $3, 0, $2), $4, $5);
                     }
-                | primary_value tCOLON2 tIDENTIFIER tOP_ASGN arg
+                | primary_value tCOLON2 tIDENTIFIER tOP_ASGN arg_rhs
                     {
                       $$ = new_op_asgn(p, new_call(p, $1, $3, 0, tCOLON2), $4, $5);
                     }
-                | primary_value tCOLON2 tCONSTANT tOP_ASGN arg
+                | primary_value tCOLON2 tCONSTANT tOP_ASGN arg_rhs
                     {
                       yyerror(p, "constant re-assignment");
                       $$ = new_begin(p, 0);
                     }
-                | tCOLON3 tCONSTANT tOP_ASGN arg
+                | tCOLON3 tCONSTANT tOP_ASGN arg_rhs
                     {
                       yyerror(p, "constant re-assignment");
                       $$ = new_begin(p, 0);
                     }
-                | backref tOP_ASGN arg
+                | backref tOP_ASGN arg_rhs
                     {
                       backref_error(p, $1);
                       $$ = new_begin(p, 0);
@@ -1929,6 +1931,13 @@ aref_args       : none
                     }
                 ;
 
+arg_rhs         : arg   %prec tOP_ASGN
+                | arg modifier_rescue arg
+                    {
+                      $$ = new_mod_rescue(p, $1, $3);
+                    }
+                ;
+
 paren_args      : '(' opt_call_args rparen
                     {
                       $$ = $2;
@@ -2081,7 +2090,7 @@ primary         : literal
                       $<stack>$ = p->cmdarg_stack;
                       p->cmdarg_stack = 0;
                     }
-                  expr {p->lstate = EXPR_ENDARG;} rparen
+                  stmt {p->lstate = EXPR_ENDARG;} rparen
                     {
                       p->cmdarg_stack = $<stack>2;
                       $$ = $3;
@@ -2963,7 +2972,7 @@ superclass      : /* term */
                   expr_value term
                     {
                       $$ = $3;
-                    } /* 
+                    } /*
                 | error term
                     {
                       yyerrok;
@@ -3231,6 +3240,18 @@ assoc           : arg_value tASSOC arg_value
                 | tLABEL arg_value
                     {
                       $$ = cons(new_sym(p, $1), $2);
+                    }
+                | tLABEL_END arg_value
+                    {
+                      $$ = cons(new_sym(p, new_strsym(p, $1)), $2);
+                    }
+                | tSTRING_BEG tLABEL_END arg_value
+                    {
+                      $$ = cons(new_sym(p, new_strsym(p, $2)), $3);
+                    }
+                | tSTRING_BEG string_rep tLABEL_END arg_value
+                    {
+                      $$ = cons(new_dsym(p, push($2, $3)), $4);
                     }
                 ;
 
@@ -3573,7 +3594,12 @@ skips(parser_state *p, const char *s)
 static int
 newtok(parser_state *p)
 {
-  p->bidx = 0;
+  if (p->tokbuf != p->buf) {
+    mrb_free(p->mrb, p->tokbuf);
+    p->tokbuf = p->buf;
+    p->tsiz = MRB_PARSER_TOKBUF_SIZE;
+  }
+  p->tidx = 0;
   return p->column - 1;
 }
 
@@ -3581,7 +3607,7 @@ static void
 tokadd(parser_state *p, int32_t c)
 {
   char utf8[4];
-  unsigned len;
+  int i, len;
 
   /* mrb_assert(-0x10FFFF <= c && c <= 0xFF); */
   if (c >= 0) {
@@ -3615,42 +3641,51 @@ tokadd(parser_state *p, int32_t c)
       len = 4;
     }
   }
-  if (p->bidx+len <= MRB_PARSER_BUF_SIZE) {
-    unsigned i;
-    for (i = 0; i < len; i++) {
-      p->buf[p->bidx++] = utf8[i];
+  if (p->tidx+len >= p->tsiz) {
+    if (p->tsiz >= MRB_PARSER_TOKBUF_MAX) {
+      p->tidx += len;
+      return;
     }
+    p->tsiz *= 2;
+    if (p->tokbuf == p->buf) {
+      p->tokbuf = (char*)mrb_malloc(p->mrb, p->tsiz);
+      memcpy(p->tokbuf, p->buf, MRB_PARSER_TOKBUF_SIZE);
+    }
+    else {
+      p->tokbuf = (char*)mrb_realloc(p->mrb, p->tokbuf, p->tsiz);
+    }
+  }
+  for (i = 0; i < len; i++) {
+    p->tokbuf[p->tidx++] = utf8[i];
   }
 }
 
 static int
 toklast(parser_state *p)
 {
-  return p->buf[p->bidx-1];
+  return p->tokbuf[p->tidx-1];
 }
 
 static void
 tokfix(parser_state *p)
 {
-  int i = p->bidx, imax = MRB_PARSER_BUF_SIZE - 1;
-
-  if (i > imax) {
-    i = imax;
+  if (p->tidx >= MRB_PARSER_TOKBUF_MAX) {
+    p->tidx = MRB_PARSER_TOKBUF_MAX-1;
     yyerror(p, "string too long (truncated)");
   }
-  p->buf[i] = '\0';
+  p->tokbuf[p->tidx] = '\0';
 }
 
 static const char*
 tok(parser_state *p)
 {
-  return p->buf;
+  return p->tokbuf;
 }
 
 static int
 toklen(parser_state *p)
 {
-  return p->bidx;
+  return p->tidx;
 }
 
 #define IS_ARG() (p->lstate == EXPR_ARG || p->lstate == EXPR_CMDARG)
@@ -3872,6 +3907,8 @@ parse_string(parser_state *p)
   int end = (intptr_t)p->lex_strterm->cdr->cdr->cdr;
   parser_heredoc_info *hinf = (type & STR_FUNC_HEREDOC) ? parsing_heredoc_inf(p) : NULL;
 
+  if (beg == 0) beg = -3;       /* should never happen */
+  if (end == 0) end = -3;
   newtok(p);
   while ((c = nextc(p)) != end || nest_level != 0) {
     if (hinf && (c == '\n' || c < 0)) {
@@ -4057,8 +4094,13 @@ parse_string(parser_state *p)
 
     return tREGEXP;
   }
-
   yylval.nd = new_str(p, tok(p), toklen(p));
+  if (IS_LABEL_SUFFIX(0)) {
+    p->lstate = EXPR_BEG;
+    nextc(p);
+    return tLABEL_END;
+  }
+
   return tSTRING;
 }
 
@@ -5196,7 +5238,7 @@ parser_yylex(parser_state *p)
         c = nextc(p);
       }
       if (c < 0) {
-        if (p->bidx == 1) {
+        if (p->tidx == 1) {
           yyerror(p, "incomplete instance variable syntax");
         }
         else {
@@ -5205,7 +5247,7 @@ parser_yylex(parser_state *p)
         return 0;
       }
       else if (isdigit(c)) {
-        if (p->bidx == 1) {
+        if (p->tidx == 1) {
           yyerror_i(p, "'@%c' is not allowed as an instance variable name", c);
         }
         else {
@@ -5437,7 +5479,10 @@ mrb_parser_parse(parser_state *p, mrbc_context *c)
     p->lex_strterm = NULL;
 
     parser_init_cxt(p, c);
-    yyparse(p);
+    if (yyparse(p) != 0 || p->nerr > 0) {
+      p->tree = 0;
+      return;
+    }
     if (!p->tree) {
       p->tree = new_nil(p);
     }
@@ -5486,6 +5531,8 @@ mrb_parser_new(mrb_state *mrb)
 #if defined(PARSER_TEST) || defined(PARSER_DEBUG)
   yydebug = 1;
 #endif
+  p->tsiz = MRB_PARSER_TOKBUF_SIZE;
+  p->tokbuf = p->buf;
 
   p->lex_strterm = NULL;
   p->all_heredocs = p->parsing_heredoc = NULL;
@@ -5500,6 +5547,9 @@ mrb_parser_new(mrb_state *mrb)
 
 MRB_API void
 mrb_parser_free(parser_state *p) {
+  if (p->tokbuf != p->buf) {
+    mrb_free(p->mrb, p->tokbuf);
+  }
   mrb_pool_close(p->pool);
 }
 
@@ -5512,6 +5562,7 @@ mrbc_context_new(mrb_state *mrb)
 MRB_API void
 mrbc_context_free(mrb_state *mrb, mrbc_context *cxt)
 {
+  mrb_free(mrb, cxt->filename);
   mrb_free(mrb, cxt->syms);
   mrb_free(mrb, cxt);
 }
@@ -5521,9 +5572,12 @@ mrbc_filename(mrb_state *mrb, mrbc_context *c, const char *s)
 {
   if (s) {
     int len = strlen(s);
-    char *p = (char *)mrb_alloca(mrb, len + 1);
+    char *p = (char *)mrb_malloc(mrb, len + 1);
 
     memcpy(p, s, len + 1);
+    if (c->filename) {
+      mrb_free(mrb, c->filename);
+    }
     c->filename = p;
   }
   return c->filename;
@@ -6240,7 +6294,8 @@ mrb_parser_dump(mrb_state *mrb, node *tree, int offset)
     break;
 
   case NODE_SYM:
-    printf("NODE_SYM :%s\n", mrb_sym2name(mrb, sym(tree)));
+    printf("NODE_SYM :%s (%d)\n", mrb_sym2name(mrb, sym(tree)),
+           (int)(intptr_t)tree);
     break;
 
   case NODE_SELF:
@@ -6454,7 +6509,7 @@ mrb_parser_dump(mrb_state *mrb, node *tree, int offset)
     break;
 
   case NODE_HEREDOC:
-    printf("NODE_HEREDOC:\n");
+    printf("NODE_HEREDOC (<<%s):\n", ((parser_heredoc_info*)tree)->term);
     mrb_parser_dump(mrb, ((parser_heredoc_info*)tree)->doc, offset+1);
     break;
 
