@@ -1,6 +1,8 @@
 # build script for Android Studio 2.2+ / Android Plugin for Gradle 2.2+
 cmake_minimum_required(VERSION 3.5)
 
+add_definitions("-DMRB_INT64 -DMRB_UTF8_STRING")
+
 include_directories(mruby/include)
 
 # ABI -> mruby build arch
