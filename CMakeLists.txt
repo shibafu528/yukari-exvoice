@@ -6,7 +6,17 @@ add_definitions("-DMRB_INT64 -DMRB_UTF8_STRING")
 include_directories(mruby/include)
 
 # ABI -> mruby build arch
-set(MRUBY_ARCH "android-${ANDROID_ABI}")
+if(ANDROID_ABI STREQUAL "armeabi")
+    set(MRUBY_ARCH "armv5-linux-androideabi")
+elseif(ANDROID_ABI STREQUAL "armeabi-v7a")
+    set(MRUBY_ARCH "armv7-linux-androideabi")
+elseif(ANDROID_ABI STREQUAL "arm64-v8a")
+    set(MRUBY_ARCH "aarch64-linux-androideabi")
+elseif(ANDROID_ABI STREQUAL "x86")
+    set(MRUBY_ARCH "x86-linux-androideabi")
+elseif(ANDROID_ABI STREQUAL "x86_64")
+    set(MRUBY_ARCH "x86_64-linux-androideabi")
+endif()
 
 link_directories(mruby/build/${MRUBY_ARCH}/lib)
 

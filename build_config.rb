@@ -1,3 +1,6 @@
+# disable pkg-config
+ENV['PKG_CONFIG_LIBDIR'] = ''
+
 configure = -> (conf) {
   # default.gembox without commands
   conf.gem :core => 'mruby-sprintf'
@@ -25,10 +28,10 @@ configure = -> (conf) {
 
   # exvoice dependencies
   conf.gem :github => 'shibafu528/mruby-pluggaloid'
+  conf.gem :github => 'shibafu528/mruby-diva', :branch => 'mruby'
   conf.gem :github => 'matsumoto-r/mruby-sleep'
   conf.gem :github => 'mattn/mruby-json'
   conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
-  conf.gem :github => 'iij/mruby-regexp-pcre'
   conf.gem :github => 'iij/mruby-io'
   conf.gem :github => 'iij/mruby-require'
 
@@ -50,27 +53,27 @@ MRuby::Build.new do |conf|
   instance_exec conf, &configure
 end
 
-MRuby::CrossBuild.new('android-armeabi') do |conf|
+MRuby::CrossBuild.new('armv5-linux-androideabi') do |conf|
   toolchain :android, arch: 'armeabi', platform: 'android-14', toolchain: :gcc
   instance_exec conf, &configure
 end
 
-MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
+MRuby::CrossBuild.new('armv7-linux-androideabi') do |conf|
   toolchain :android, arch: 'armeabi-v7a', platform: 'android-14', toolchain: :gcc
   instance_exec conf, &configure
 end
 
-MRuby::CrossBuild.new('android-arm64-v8a') do |conf|
+MRuby::CrossBuild.new('aarch64-linux-androideabi') do |conf|
   toolchain :android, arch: 'arm64-v8a', platform: 'android-21', toolchain: :gcc
   instance_exec conf, &configure
 end
 
-MRuby::CrossBuild.new('android-x86') do |conf|
+MRuby::CrossBuild.new('x86-linux-androideabi') do |conf|
   toolchain :android, arch: 'x86', platform: 'android-14', toolchain: :gcc
   instance_exec conf, &configure
 end
 
-MRuby::CrossBuild.new('android-x86_64') do |conf|
-  toolchain :android, arch: 'x86_64', platform: 'android-21', toolchain: :gcc
-  instance_exec conf, &configure
-end
+# MRuby::CrossBuild.new('x86_64-linux-androideabi') do |conf|
+#   toolchain :android, arch: 'x86_64', platform: 'android-21', toolchain: :gcc
+#   instance_exec conf, &configure
+# end
