@@ -1,3 +1,5 @@
+require 'shellwords'
+
 class MRuby::Toolchain::Android
 
   DEFAULT_ARCH = 'armeabi' # TODO : Revise if arch should have a default
@@ -258,7 +260,7 @@ Set ANDROID_PLATFORM environment variable or set :platform parameter
   def cflags
     flags = []
 
-    flags += %W(-MMD -MP -D__android__ -DANDROID --sysroot="#{sysroot}")
+    flags += %W(-MMD -MP -D__android__ -DANDROID --sysroot=#{Shellwords.escape(sysroot)})
     flags += ctarget
     case toolchain
     when :gcc
@@ -273,7 +275,7 @@ Set ANDROID_PLATFORM environment variable or set :platform parameter
   def ldflags
     flags = []
 
-    flags += %W(--sysroot="#{sysroot}")
+    flags += %W(--sysroot=#{Shellwords.escape(sysroot)})
 
     flags
   end
