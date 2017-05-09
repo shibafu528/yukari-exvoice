@@ -74,14 +74,12 @@ static void
 get_backtrace_i(mrb_state *mrb, struct backtrace_location *loc, void *data)
 {
   mrb_value ary, str;
-  int ai;
+  int ai = mrb_gc_arena_save(mrb);
 
-  ai = mrb_gc_arena_save(mrb);
   ary = mrb_obj_value((struct RArray*)data);
 
   str = mrb_str_new_cstr(mrb, loc->filename);
-  mrb_str_cat_lit(mrb, str, ":");
-  mrb_str_concat(mrb, str, mrb_fixnum_to_str(mrb, mrb_fixnum_value(loc->lineno), 10));
+  str = mrb_format(mrb, "%S:%S", str, mrb_fixnum_value(loc->lineno));
 
   if (loc->method) {
     mrb_str_cat_lit(mrb, str, ":in ");
@@ -191,7 +189,8 @@ exc_output_backtrace(mrb_state *mrb, struct RObject *exc, output_stream_func fun
   lastpc = mrb_obj_iv_get(mrb, exc, mrb_intern_lit(mrb, "lastpc"));
   if (mrb_nil_p(lastpc)) {
     code = NULL;
-  } else {
+  }
+  else {
     code = (mrb_code*)mrb_cptr(lastpc);
   }
 
@@ -229,10 +228,11 @@ print_backtrace(mrb_state *mrb, mrb_value backtrace)
 static void
 print_backtrace_saved(mrb_state *mrb)
 {
-  int i;
+  int i, ai;
   FILE *stream = stderr;
 
   fprintf(stream, "trace:\n");
+  ai = mrb_gc_arena_save(mrb);
   for (i = 0; i < mrb->backtrace.n; i++) {
     mrb_backtrace_entry *entry;
 
@@ -252,6 +252,7 @@ print_backtrace_saved(mrb_state *mrb)
       else {
         fprintf(stream, ":in %s", method_name);
       }
+      mrb_gc_arena_restore(mrb, ai);
     }
 
     fprintf(stream, "\n");
@@ -401,12 +402,9 @@ mrb_restore_backtrace(mrb_state *mrb)
     ai = mrb_gc_arena_save(mrb);
     entry = &(mrb->backtrace.entries[i]);
 
-    mrb_entry = mrb_str_new_cstr(mrb, entry->filename);
-    mrb_str_cat_lit(mrb, mrb_entry, ":");
-    mrb_str_concat(mrb, mrb_entry,
-                   mrb_fixnum_to_str(mrb,
-                                     mrb_fixnum_value(entry->lineno),
-                                     10));
+    mrb_entry = mrb_format(mrb, "%S:%S",
+                           mrb_str_new_cstr(mrb, entry->filename),
+                           mrb_fixnum_value(entry->lineno));
     if (entry->method_id != 0) {
       mrb_str_cat_lit(mrb, mrb_entry, ":in ");
 
