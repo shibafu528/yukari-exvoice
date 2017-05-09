@@ -130,9 +130,13 @@ MRuby::Build.new('test') do |conf|
 end
 
 MRuby::Build.new('bench') do |conf|
-  toolchain :gcc
-
-  conf.cc.flags << '-O3'
+  # Gets set by the VS command prompts.
+  if ENV['VisualStudioVersion'] || ENV['VSINSTALLDIR']
+    toolchain :visualcpp
+  else
+    toolchain :gcc
+    conf.cc.flags << '-O3'
+  end
 
   conf.gembox 'default'
 end
@@ -182,7 +186,7 @@ MRuby::CrossBuild.new('android-armeabi-v7a') do |conf|
   conf.gembox 'default'
 
 end
-MRuby::CrossBuild.new('android-arm64') do |conf|
+MRuby::CrossBuild.new('android-arm64-v8a') do |conf|
 
   toolchain :android, arch: 'arm64', platform: 'android-21'
 

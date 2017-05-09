@@ -45,7 +45,7 @@ class String
   def lstrip
     a = 0
     z = self.size - 1
-    a += 1 while " \f\n\r\t\v".include?(self[a]) and a <= z
+    a += 1 while a <= z and " \f\n\r\t\v".include?(self[a])
     (z >= 0) ? self[a..z] : ""
   end
 
@@ -62,7 +62,7 @@ class String
   def rstrip
     a = 0
     z = self.size - 1
-    z -= 1 while " \f\n\r\t\v\0".include?(self[z]) and a <= z
+    z -= 1 while a <= z and " \f\n\r\t\v\0".include?(self[z])
     (z >= 0) ? self[a..z] : ""
   end
 
@@ -78,8 +78,8 @@ class String
   def strip
     a = 0
     z = self.size - 1
-    a += 1 while " \f\n\r\t\v".include?(self[a]) and a <= z
-    z -= 1 while " \f\n\r\t\v\0".include?(self[z]) and a <= z
+    a += 1 while a <= z and " \f\n\r\t\v".include?(self[a])
+    z -= 1 while a <= z and " \f\n\r\t\v\0".include?(self[z])
     (z >= 0) ? self[a..z] : ""
   end
 
@@ -95,6 +95,7 @@ class String
   #    "hello".lstrip!      #=> nil
   #
   def lstrip!
+    raise RuntimeError, "can't modify frozen String" if frozen?
     s = self.lstrip
     (s == self) ? nil : self.replace(s)
   end
@@ -111,6 +112,7 @@ class String
   #    "hello".rstrip!      #=> nil
   #
   def rstrip!
+    raise RuntimeError, "can't modify frozen String" if frozen?
     s = self.rstrip
     (s == self) ? nil : self.replace(s)
   end
@@ -123,6 +125,7 @@ class String
   #  <code>nil</code> if <i>str</i> was not altered.
   #
   def strip!
+    raise RuntimeError, "can't modify frozen String" if frozen?
     s = self.strip
     (s == self) ? nil : self.replace(s)
   end
@@ -183,6 +186,7 @@ class String
   #    string                  #=> "thsa sting"
   #
   def slice!(arg1, arg2=nil)
+    raise RuntimeError, "can't modify frozen String" if frozen?
     raise "wrong number of arguments (for 1..2)" if arg1.nil? && arg2.nil?
 
     if !arg1.nil? && !arg2.nil?
@@ -207,7 +211,7 @@ class String
       else
         idx = arg1
         idx += self.size if arg1 < 0
-        validated = true if idx >=0 && arg1 < self.size   
+        validated = true if idx >=0 && arg1 < self.size
       end
       if validated
         str = self[arg1]
@@ -254,14 +258,13 @@ class String
   #     "abcd".insert(-1, 'X')   #=> "abcdX"
   #
   def insert(idx, str)
-    pos = idx.to_i
-    pos += self.size + 1 if pos < 0
-
-    raise IndexError, "index #{idx.to_i} out of string" if pos < 0 || pos > self.size
-
-    return self + str if pos == -1
-    return str + self if pos == 0
-    return self[0..pos - 1] + str + self[pos..-1]
+    if idx == -1
+      return self << str
+    elsif idx < 0
+      idx += 1
+    end
+    self[idx, 0] = str
+    self
   end
 
   ##
@@ -276,15 +279,11 @@ class String
   #     "hello".ljust(20)           #=> "hello               "
   #     "hello".ljust(20, '1234')   #=> "hello123412341234123"
   def ljust(idx, padstr = ' ')
-    if idx <= self.size
-      return self
-    end
-    newstr = self.dup
-    newstr << padstr
-    while newstr.size <= idx
-      newstr << padstr
-    end
-    return newstr.slice(0,idx)
+    raise ArgumentError, 'zero width padding' if padstr == ''
+    return self if idx <= self.size
+    pad_repetitions = (idx / padstr.length).ceil
+    padding = (padstr * pad_repetitions)[0...(idx - self.length)]
+    self + padding
   end
 
   ##
@@ -299,15 +298,11 @@ class String
   #     "hello".rjust(20)           #=> "               hello"
   #     "hello".rjust(20, '1234')   #=> "123412341234123hello"
   def rjust(idx, padstr = ' ')
-    if idx <= self.size
-      return self
-    end
-      padsize = idx - self.size
-      newstr = padstr.dup
-      while newstr.size <= padsize
-        newstr << padstr
-      end
-    return newstr.slice(0,padsize) + self
+    raise ArgumentError, 'zero width padding' if padstr == ''
+    return self if idx <= self.size
+    pad_repetitions = (idx / padstr.length).ceil
+    padding = (padstr * pad_repetitions)[0...(idx - self.length)]
+    padding + self
   end
 
   #     str.upto(other_str, exclusive=false) {|s| block }   -> str
@@ -350,12 +345,13 @@ class String
       return self if !excl && str == other_str
       str = str.succ
       return self if excl && str == other_str
+      return self if str.size > other_str.size
     end
   end
 
   def chars(&block)
     if block_given?
-      self.split('').map do |i|
+      self.split('').each do |i|
         block.call(i)
       end
       self
@@ -363,13 +359,21 @@ class String
       self.split('')
     end
   end
-  alias each_char chars
+
+  def each_char(&block)
+    return to_enum :each_char unless block
+
+    split('').each do |i|
+      block.call(i)
+    end
+    self
+  end
 
   def codepoints(&block)
     len = self.size
 
     if block_given?
-      self.split('').map do|x|
+      self.split('').each do|x|
         block.call(x.ord)
       end
       self
@@ -378,4 +382,18 @@ class String
     end
   end
   alias each_codepoint codepoints
+
+  ##
+  # call-seq:
+  #    str.prepend(other_str)  -> str
+  #
+  # Prepend---Prepend the given string to <i>str</i>.
+  #
+  #    a = "world"
+  #    a.prepend("hello ") #=> "hello world"
+  #    a                   #=> "hello world"
+  def prepend(arg)
+    self[0, 0] = arg
+    self
+  end
 end

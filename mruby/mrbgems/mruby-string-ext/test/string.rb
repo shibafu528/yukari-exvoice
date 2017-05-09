@@ -30,6 +30,18 @@ assert('String#setbyte') do
   assert_equal("Hello", str1)
 end
 
+assert("String#setbyte raises IndexError if arg conversion resizes String") do
+  $s = "01234\n"
+  class Tmp
+      def to_i
+          $s.chomp! ''
+          95
+      end
+  end
+  tmp = Tmp.new
+  assert_raise(IndexError) { $s.setbyte(5, tmp) }
+end
+
 assert('String#byteslice') do
   str1 = "hello"
   assert_equal("e", str1.byteslice(1))
@@ -406,6 +418,10 @@ assert('String#insert') do
   assert_equal "abcdX", "abcd".insert(-1, 'X')
   assert_raise(IndexError) { "abcd".insert(5, 'X') }
   assert_raise(IndexError) { "abcd".insert(-6, 'X') }
+
+  a = "abcd"
+  a.insert(0, 'X')
+  assert_equal "Xabcd", a
 end
 
 assert('String#prepend') do
@@ -417,6 +433,7 @@ end
 assert('String#ljust') do
   assert_equal "hello", "hello".ljust(4)
   assert_equal "hello               ", "hello".ljust(20)
+  assert_equal 20, "hello".ljust(20).length
   assert_equal "hello123412341234123", "hello".ljust(20, '1234')
   assert_equal "hello", "hello".ljust(-3)
 end
@@ -424,8 +441,53 @@ end
 assert('String#rjust') do
   assert_equal "hello", "hello".rjust(4)
   assert_equal "               hello", "hello".rjust(20)
+  assert_equal 20, "hello".rjust(20).length
   assert_equal "123412341234123hello", "hello".rjust(20, '1234')
   assert_equal "hello", "hello".rjust(-3)
+end
+
+if UTF8STRING
+  assert('String#ljust with UTF8') do
+    assert_equal "helloん              ", "helloん".ljust(20)
+    assert_equal "helloó                            ", "helloó".ljust(34)
+    assert_equal 34, "helloó".ljust(34).length
+    assert_equal "helloんんんんんんんんんんんんんん", "hello".ljust(19, 'ん')
+    assert_equal "helloんんんんんんんんんんんんんんん", "hello".ljust(20, 'ん')
+  end
+
+  assert('String#rjust with UTF8') do
+    assert_equal "              helloん", "helloん".rjust(20)
+    assert_equal "                            helloó", "helloó".rjust(34)
+    # assert_equal 34, "helloó".rjust(34).length
+    assert_equal "んんんんんんんんんんんんんんhello", "hello".rjust(19, 'ん')
+    assert_equal "んんんんんんんんんんんんんんんhello", "hello".rjust(20, 'ん')
+  end
+
+  assert('UTF8 byte counting') do
+    ret = '                                  '
+    ret[-6..-1] = "helloó"
+    assert_equal 34, ret.length
+  end
+end
+
+assert('String#ljust should not change string') do
+  a = "hello"
+  a.ljust(20)
+  assert_equal "hello", a
+end
+
+assert('String#rjust should not change string') do
+  a = "hello"
+  a.rjust(20)
+  assert_equal "hello", a
+end
+
+assert('String#ljust should raise on zero width padding') do
+  assert_raise(ArgumentError) { "foo".ljust(10, '') }
+end
+
+assert('String#rjust should raise on zero width padding') do
+  assert_raise(ArgumentError) { "foo".rjust(10, '') }
 end
 
 assert('String#upto') do
@@ -493,6 +555,10 @@ end
 assert('String#ord') do
   got = "hello!".split('').map {|x| x.ord}
   expect = [104, 101, 108, 108, 111, 33]
+  unless UTF8STRING
+    got << "\xff".ord
+    expect << 0xff
+  end
   assert_equal expect, got
 end
 

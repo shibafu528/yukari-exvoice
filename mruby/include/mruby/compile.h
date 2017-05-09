@@ -102,7 +102,8 @@ struct mrb_parser_heredoc_info {
   mrb_ast_node *doc;
 };
 
-#define MRB_PARSER_BUF_SIZE 1024
+#define MRB_PARSER_TOKBUF_MAX 65536
+#define MRB_PARSER_TOKBUF_SIZE 256
 
 /* parser structure */
 struct mrb_parser_state {
@@ -130,8 +131,10 @@ struct mrb_parser_state {
   mrb_ast_node *locals;
 
   mrb_ast_node *pb;
-  char buf[MRB_PARSER_BUF_SIZE];
-  int bidx;
+  char *tokbuf;
+  char buf[MRB_PARSER_TOKBUF_SIZE];
+  int tidx;
+  int tsiz;
 
   mrb_ast_node *all_heredocs;	/* list of mrb_parser_heredoc_info* */
   mrb_ast_node *heredocs_from_nextline;
@@ -160,6 +163,7 @@ struct mrb_parser_state {
 MRB_API struct mrb_parser_state* mrb_parser_new(mrb_state*);
 MRB_API void mrb_parser_free(struct mrb_parser_state*);
 MRB_API void mrb_parser_parse(struct mrb_parser_state*,mrbc_context*);
+MRB_API double mrb_float_read(const char*, char**);
 
 MRB_API void mrb_parser_set_filename(struct mrb_parser_state*, char const*);
 MRB_API char const* mrb_parser_get_filename(struct mrb_parser_state*, uint16_t idx);
@@ -171,6 +175,7 @@ MRB_API struct mrb_parser_state* mrb_parse_file(mrb_state*,FILE*,mrbc_context*);
 MRB_API struct mrb_parser_state* mrb_parse_string(mrb_state*,const char*,mrbc_context*);
 MRB_API struct mrb_parser_state* mrb_parse_nstring(mrb_state*,const char*,int,mrbc_context*);
 MRB_API struct RProc* mrb_generate_code(mrb_state*, struct mrb_parser_state*);
+MRB_API mrb_value mrb_load_exec(mrb_state *mrb, struct mrb_parser_state *p, mrbc_context *c);
 
 /* program load functions */
 #ifndef MRB_DISABLE_STDIO

@@ -16,28 +16,16 @@
 #define ARY_C_MAX_SIZE (SIZE_MAX / sizeof(mrb_value))
 #define ARY_MAX_SIZE ((ARY_C_MAX_SIZE < (size_t)MRB_INT_MAX) ? (mrb_int)ARY_C_MAX_SIZE : MRB_INT_MAX-1)
 
-static inline mrb_value
-ary_elt(mrb_value ary, mrb_int offset)
-{
-  if (offset < 0 || RARRAY_LEN(ary) <= offset) {
-    return mrb_nil_value();
-  }
-  return RARRAY_PTR(ary)[offset];
-}
-
 static struct RArray*
 ary_new_capa(mrb_state *mrb, mrb_int capa)
 {
   struct RArray *a;
-  mrb_int blen;
+  size_t blen;
 
   if (capa > ARY_MAX_SIZE) {
     mrb_raise(mrb, E_ARGUMENT_ERROR, "array size too big");
   }
   blen = capa * sizeof(mrb_value);
-  if (blen < capa) {
-    mrb_raise(mrb, E_ARGUMENT_ERROR, "array size too big");
-  }
 
   a = (struct RArray*)mrb_obj_alloc(mrb, MRB_TT_ARRAY, mrb->array_class);
   a->ptr = (mrb_value *)mrb_malloc(mrb, blen);
@@ -120,6 +108,10 @@ ary_fill_with_nil(mrb_value *ptr, mrb_int size)
 static void
 ary_modify(mrb_state *mrb, struct RArray *a)
 {
+  if (MRB_FROZEN_P(a)) {
+    mrb_raise(mrb, E_RUNTIME_ERROR, "can't modify frozen array");
+  }
+
   if (ARY_SHARED_P(a)) {
     mrb_shared_array *shared = a->aux.shared;
 
@@ -130,7 +122,7 @@ ary_modify(mrb_state *mrb, struct RArray *a)
     }
     else {
       mrb_value *ptr, *p;
-      mrb_int len;
+      size_t len;
 
       p = a->ptr;
       len = a->len * sizeof(mrb_value);
@@ -173,11 +165,12 @@ ary_make_shared(mrb_state *mrb, struct RArray *a)
 }
 
 static void
-ary_expand_capa(mrb_state *mrb, struct RArray *a, mrb_int len)
+ary_expand_capa(mrb_state *mrb, struct RArray *a, size_t len)
 {
-  mrb_int capa = a->aux.capa;
+  size_t capa = a->aux.capa;
 
   if (len > ARY_MAX_SIZE) {
+  size_error:
     mrb_raise(mrb, E_ARGUMENT_ERROR, "array size too big");
   }
 
@@ -185,15 +178,21 @@ ary_expand_capa(mrb_state *mrb, struct RArray *a, mrb_int len)
     capa = ARY_DEFAULT_LEN;
   }
   while (capa < len) {
-    capa *= 2;
+    if (capa <= ARY_MAX_SIZE / 2) {
+      capa *= 2;
+    }
+    else {
+      capa = len;
+    }
+  }
+  if (capa < len || capa > ARY_MAX_SIZE) {
+    goto size_error;
   }
 
-  if (capa > ARY_MAX_SIZE) capa = ARY_MAX_SIZE; /* len <= capa <= ARY_MAX_SIZE */
-
-  if (capa > a->aux.capa) {
+  if (capa > (size_t)a->aux.capa) {
     mrb_value *expanded_ptr = (mrb_value *)mrb_realloc(mrb, a->ptr, sizeof(mrb_value)*capa);
 
-    a->aux.capa = capa;
+    a->aux.capa = (mrb_int)capa;
     a->ptr = expanded_ptr;
   }
 }
@@ -243,24 +242,36 @@ mrb_ary_resize(mrb_state *mrb, mrb_value ary, mrb_int new_len)
 }
 
 static mrb_value
-mrb_ary_s_create(mrb_state *mrb, mrb_value self)
+mrb_ary_s_create(mrb_state *mrb, mrb_value klass)
 {
+  mrb_value ary;
   mrb_value *vals;
   mrb_int len;
+  struct RArray *a;
 
   mrb_get_args(mrb, "*", &vals, &len);
+  ary = mrb_ary_new_from_values(mrb, len, vals);
+  a = mrb_ary_ptr(ary);
+  a->c = mrb_class_ptr(klass);
 
-  return mrb_ary_new_from_values(mrb, len, vals);
+  return ary;
 }
 
 static void
-ary_concat(mrb_state *mrb, struct RArray *a, mrb_value *ptr, mrb_int blen)
+ary_concat(mrb_state *mrb, struct RArray *a, struct RArray *a2)
 {
-  mrb_int len = a->len + blen;
+  mrb_int len;
+
+  if (a2->len > ARY_MAX_SIZE - a->len) {
+    mrb_raise(mrb, E_ARGUMENT_ERROR, "array size too big");
+  }
+  len = a->len + a2->len;
 
   ary_modify(mrb, a);
-  if (a->aux.capa < len) ary_expand_capa(mrb, a, len);
-  array_copy(a->ptr+a->len, ptr, blen);
+  if (a->aux.capa < len) {
+    ary_expand_capa(mrb, a, len);
+  }
+  array_copy(a->ptr+a->len, a2->ptr, a2->len);
   mrb_write_barrier(mrb, (struct RBasic*)a);
   a->len = len;
 }
@@ -270,17 +281,16 @@ mrb_ary_concat(mrb_state *mrb, mrb_value self, mrb_value other)
 {
   struct RArray *a2 = mrb_ary_ptr(other);
 
-  ary_concat(mrb, mrb_ary_ptr(self), a2->ptr, a2->len);
+  ary_concat(mrb, mrb_ary_ptr(self), a2);
 }
 
 static mrb_value
 mrb_ary_concat_m(mrb_state *mrb, mrb_value self)
 {
-  mrb_value *ptr;
-  mrb_int blen;
+  mrb_value ary;
 
-  mrb_get_args(mrb, "a", &ptr, &blen);
-  ary_concat(mrb, mrb_ary_ptr(self), ptr, blen);
+  mrb_get_args(mrb, "A", &ary);
+  mrb_ary_concat(mrb, self, ary);
   return self;
 }
 
@@ -318,9 +328,12 @@ ary_replace(mrb_state *mrb, struct RArray *a, mrb_value *argv, mrb_int len)
 MRB_API void
 mrb_ary_replace(mrb_state *mrb, mrb_value self, mrb_value other)
 {
+  struct RArray *a1 = mrb_ary_ptr(self);
   struct RArray *a2 = mrb_ary_ptr(other);
 
-  ary_replace(mrb, mrb_ary_ptr(self), a2->ptr, a2->len);
+  if (a1 != a2) {
+    ary_replace(mrb, a1, a2->ptr, a2->len);
+  }
 }
 
 static mrb_value
@@ -432,6 +445,7 @@ mrb_ary_pop(mrb_state *mrb, mrb_value ary)
 {
   struct RArray *a = mrb_ary_ptr(ary);
 
+  ary_modify(mrb, a);
   if (a->len == 0) return mrb_nil_value();
   return a->ptr[--a->len];
 }
@@ -444,6 +458,7 @@ mrb_ary_shift(mrb_state *mrb, mrb_value self)
   struct RArray *a = mrb_ary_ptr(self);
   mrb_value val;
 
+  ary_modify(mrb, a);
   if (a->len == 0) return mrb_nil_value();
   if (ARY_SHARED_P(a)) {
   L_SHIFT:
@@ -506,6 +521,9 @@ mrb_ary_unshift_m(mrb_state *mrb, mrb_value self)
   mrb_int len;
 
   mrb_get_args(mrb, "*", &vals, &len);
+  if (len > ARY_MAX_SIZE - a->len) {
+    mrb_raise(mrb, E_ARGUMENT_ERROR, "array size too big");
+  }
   if (ARY_SHARED_P(a)
       && a->aux.shared->refcnt == 1 /* shared only referenced from this array */
       && a->ptr - a->aux.shared->ptr >= len) /* there's room for unshifted item */ {
@@ -563,13 +581,22 @@ mrb_ary_set(mrb_state *mrb, mrb_value ary, mrb_int n, mrb_value val)
   mrb_field_write_barrier_value(mrb, (struct RBasic*)a, val);
 }
 
+static struct RArray*
+ary_dup(mrb_state *mrb, struct RArray *a)
+{
+  struct RArray *d = ary_new_capa(mrb, a->len);
+
+  ary_replace(mrb, d, a->ptr, a->len);
+  return d;
+}
+
 MRB_API mrb_value
 mrb_ary_splice(mrb_state *mrb, mrb_value ary, mrb_int head, mrb_int len, mrb_value rpl)
 {
   struct RArray *a = mrb_ary_ptr(ary);
-  mrb_int tail, size;
   const mrb_value *argv;
-  mrb_int i, argc;
+  mrb_int argc;
+  size_t tail;
 
   ary_modify(mrb, a);
 
@@ -583,40 +610,59 @@ mrb_ary_splice(mrb_state *mrb, mrb_value ary, mrb_int head, mrb_int len, mrb_val
       mrb_raise(mrb, E_INDEX_ERROR, "index is out of array");
     }
   }
-  if (a->len < len || a->len < head + len) {
+  tail = head + len;
+  if (a->len < len || (size_t)a->len < tail) {
     len = a->len - head;
   }
-  tail = head + len;
 
   /* size check */
   if (mrb_array_p(rpl)) {
     argc = RARRAY_LEN(rpl);
     argv = RARRAY_PTR(rpl);
+    if (argv == a->ptr) {
+      struct RArray *r = ary_dup(mrb, a);
+      argv = r->ptr;
+    }
   }
   else {
     argc = 1;
     argv = &rpl;
   }
-  size = head + argc;
-
-  if (tail < a->len) size += a->len - tail;
-  if (size > a->aux.capa)
-    ary_expand_capa(mrb, a, size);
-
-  if (head > a->len) {
+  if (head >= a->len) {
+    if (head > ARY_MAX_SIZE - argc) {
+      mrb_raisef(mrb, E_INDEX_ERROR, "index %S too big", mrb_fixnum_value(head));
+    }
+    len = head + argc;
+    if (len > a->aux.capa) {
+      ary_expand_capa(mrb, a, head + argc);
+    }
     ary_fill_with_nil(a->ptr + a->len, head - a->len);
+    if (argc > 0) {
+      array_copy(a->ptr + head, argv, argc);
+    }
+    a->len = len;
   }
-  else if (head < a->len) {
-    value_move(a->ptr + head + argc, a->ptr + tail, a->len - tail);
+  else {
+    mrb_int alen;
+
+    if (a->len - len > ARY_MAX_SIZE - argc) {
+      mrb_raisef(mrb, E_INDEX_ERROR, "index %S too big", mrb_fixnum_value(a->len + argc - len));
+    }
+    alen = a->len + argc - len;
+    if (alen > a->aux.capa) {
+      ary_expand_capa(mrb, a, alen);
+    }
+
+    if (len != argc) {
+      tail = head + len;
+      value_move(a->ptr + head + argc, a->ptr + tail, a->len - tail);
+      a->len = alen;
+    }
+    if (argc > 0) {
+      value_move(a->ptr + head, argv, argc);
+    }
   }
-
-  for (i = 0; i < argc; i++) {
-    *(a->ptr + head + i) = *(argv + i);
-    mrb_field_write_barrier_value(mrb, (struct RBasic*)a, argv[i]);
-  }
-
-  a->len = size;
-
+  mrb_write_barrier(mrb, (struct RBasic*)a);
   return ary;
 }
 
@@ -702,7 +748,7 @@ mrb_ary_aget(mrb_state *mrb, mrb_value self)
     switch (mrb_type(index)) {
       /* a[n..m] */
     case MRB_TT_RANGE:
-      if (mrb_range_beg_len(mrb, index, &i, &len, a->len)) {
+      if (mrb_range_beg_len(mrb, index, &i, &len, a->len, TRUE) == 1) {
         return ary_subseq(mrb, a, i, len);
       }
       else {
@@ -766,20 +812,18 @@ mrb_ary_aset(mrb_state *mrb, mrb_value self)
   mrb_value v1, v2, v3;
   mrb_int i, len;
 
+  mrb_ary_modify(mrb, mrb_ary_ptr(self));
   if (mrb_get_args(mrb, "oo|o", &v1, &v2, &v3) == 2) {
-    switch (mrb_type(v1)) {
     /* a[n..m] = v */
-    case MRB_TT_RANGE:
-      if (mrb_range_beg_len(mrb, v1, &i, &len, RARRAY_LEN(self))) {
-        mrb_ary_splice(mrb, self, i, len, v2);
-      }
-      break;
-    /* a[n] = v */
-    case MRB_TT_FIXNUM:
-      mrb_ary_set(mrb, self, mrb_fixnum(v1), v2);
-      break;
-    default:
+    switch (mrb_range_beg_len(mrb, v1, &i, &len, RARRAY_LEN(self), FALSE)) {
+    case 0:                   /* not range */
       mrb_ary_set(mrb, self, aget_index(mrb, v1), v2);
+      break;
+    case 1:                   /* range */
+      mrb_ary_splice(mrb, self, i, len, v2);
+      break;
+    case 2:                   /* out of range */
+      mrb_raisef(mrb, E_RANGE_ERROR, "%S out of range", v1);
       break;
     }
     return v2;
@@ -877,12 +921,15 @@ static mrb_value
 mrb_ary_rindex_m(mrb_state *mrb, mrb_value self)
 {
   mrb_value obj;
-  mrb_int i;
+  mrb_int i, len;
 
   mrb_get_args(mrb, "o", &obj);
   for (i = RARRAY_LEN(self) - 1; i >= 0; i--) {
     if (mrb_equal(mrb, RARRAY_PTR(self)[i], obj)) {
       return mrb_fixnum_value(i);
+    }
+    if (i > (len = RARRAY_LEN(self))) {
+      i = len;
     }
   }
   return mrb_nil_value();
@@ -891,14 +938,32 @@ mrb_ary_rindex_m(mrb_state *mrb, mrb_value self)
 MRB_API mrb_value
 mrb_ary_splat(mrb_state *mrb, mrb_value v)
 {
+  mrb_value a, recv_class;
+
   if (mrb_array_p(v)) {
     return v;
   }
-  if (mrb_respond_to(mrb, v, mrb_intern_lit(mrb, "to_a"))) {
-    return mrb_funcall(mrb, v, "to_a", 0);
+
+  if (!mrb_respond_to(mrb, v, mrb_intern_lit(mrb, "to_a"))) {
+    return mrb_ary_new_from_values(mrb, 1, &v);
+  }
+
+  a = mrb_funcall(mrb, v, "to_a", 0);
+  if (mrb_array_p(a)) {
+    return a;
+  }
+  else if (mrb_nil_p(a)) {
+    return mrb_ary_new_from_values(mrb, 1, &v);
   }
   else {
-    return mrb_ary_new_from_values(mrb, 1, &v);
+    recv_class = mrb_obj_value(mrb_obj_class(mrb, v));
+    mrb_raisef(mrb, E_TYPE_ERROR, "can't convert %S to Array (%S#to_a gives %S)",
+      recv_class,
+      recv_class,
+      mrb_obj_value(mrb_obj_class(mrb, a))
+    );
+    /* not reached */
+    return mrb_undef_value();
   }
 }
 
@@ -915,6 +980,7 @@ mrb_ary_clear(mrb_state *mrb, mrb_value self)
 {
   struct RArray *a = mrb_ary_ptr(self);
 
+  ary_modify(mrb, a);
   if (ARY_SHARED_P(a)) {
     mrb_ary_decref(mrb, a->aux.shared);
     ARY_UNSET_SHARED_FLAG(a);
@@ -987,15 +1053,17 @@ join_ary(mrb_state *mrb, mrb_value ary, mrb_value sep, mrb_value list)
       break;
 
     default:
-      tmp = mrb_check_string_type(mrb, val);
-      if (!mrb_nil_p(tmp)) {
-        val = tmp;
-        goto str_join;
-      }
-      tmp = mrb_check_convert_type(mrb, val, MRB_TT_ARRAY, "Array", "to_ary");
-      if (!mrb_nil_p(tmp)) {
-        val = tmp;
-        goto ary_join;
+      if (!mrb_immediate_p(val)) {
+        tmp = mrb_check_string_type(mrb, val);
+        if (!mrb_nil_p(tmp)) {
+          val = tmp;
+          goto str_join;
+        }
+        tmp = mrb_check_convert_type(mrb, val, MRB_TT_ARRAY, "Array", "to_ary");
+        if (!mrb_nil_p(tmp)) {
+          val = tmp;
+          goto ary_join;
+        }
       }
       val = mrb_obj_as_string(mrb, val);
       goto str_join;
@@ -1010,7 +1078,9 @@ join_ary(mrb_state *mrb, mrb_value ary, mrb_value sep, mrb_value list)
 MRB_API mrb_value
 mrb_ary_join(mrb_state *mrb, mrb_value ary, mrb_value sep)
 {
-  sep = mrb_obj_as_string(mrb, sep);
+  if (!mrb_nil_p(sep)) {
+    sep = mrb_obj_as_string(mrb, sep);
+  }
   return join_ary(mrb, ary, sep, mrb_ary_new(mrb));
 }
 
@@ -1090,6 +1160,7 @@ mrb_init_array(mrb_state *mrb)
   mrb_define_method(mrb, a, "length",          mrb_ary_size,         MRB_ARGS_NONE()); /* 15.2.12.5.19 */
   mrb_define_method(mrb, a, "pop",             mrb_ary_pop,          MRB_ARGS_NONE()); /* 15.2.12.5.21 */
   mrb_define_method(mrb, a, "push",            mrb_ary_push_m,       MRB_ARGS_ANY());  /* 15.2.12.5.22 */
+  mrb_define_method(mrb, a, "append",          mrb_ary_push_m,       MRB_ARGS_ANY());
   mrb_define_method(mrb, a, "replace",         mrb_ary_replace_m,    MRB_ARGS_REQ(1)); /* 15.2.12.5.23 */
   mrb_define_method(mrb, a, "reverse",         mrb_ary_reverse,      MRB_ARGS_NONE()); /* 15.2.12.5.24 */
   mrb_define_method(mrb, a, "reverse!",        mrb_ary_reverse_bang, MRB_ARGS_NONE()); /* 15.2.12.5.25 */
@@ -1098,6 +1169,7 @@ mrb_init_array(mrb_state *mrb)
   mrb_define_method(mrb, a, "size",            mrb_ary_size,         MRB_ARGS_NONE()); /* 15.2.12.5.28 */
   mrb_define_method(mrb, a, "slice",           mrb_ary_aget,         MRB_ARGS_ANY());  /* 15.2.12.5.29 */
   mrb_define_method(mrb, a, "unshift",         mrb_ary_unshift_m,    MRB_ARGS_ANY());  /* 15.2.12.5.30 */
+  mrb_define_method(mrb, a, "prepend",         mrb_ary_unshift_m,    MRB_ARGS_ANY());
 
   mrb_define_method(mrb, a, "__ary_eq",        mrb_ary_eq,           MRB_ARGS_REQ(1));
   mrb_define_method(mrb, a, "__ary_cmp",       mrb_ary_cmp,          MRB_ARGS_REQ(1));

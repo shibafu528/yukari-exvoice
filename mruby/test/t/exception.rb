@@ -338,10 +338,13 @@ assert('Exception 19') do
       begin
         1 * "b"
       ensure
-        @e = self.z
+        @e = self.zz
       end
     end
 
+    def zz
+      true
+    end
     def z
       true
     end
@@ -350,7 +353,7 @@ assert('Exception 19') do
 end
 
 assert('Exception#inspect without message') do
-  assert_equal "Exception: Exception", Exception.new.inspect
+  assert_equal "Exception", Exception.new.inspect
 end
 
 assert('Exception#backtrace') do
@@ -373,7 +376,7 @@ assert('Raise in ensure') do
   end
 end
 
-def backtrace_avaialble?
+def backtrace_available?
   begin
     raise "XXX"
   rescue => exception
@@ -382,7 +385,7 @@ def backtrace_avaialble?
 end
 
 assert('GC in rescue') do
-  skip "backtrace isn't avaialble" unless backtrace_avaialble?
+  skip "backtrace isn't available" unless backtrace_available?
 
   line = nil
   begin
@@ -401,7 +404,7 @@ assert('GC in rescue') do
 end
 
 assert('Method call in rescue') do
-  skip "backtrace isn't avaialble" unless backtrace_avaialble?
+  skip "backtrace isn't available" unless backtrace_available?
 
   line = nil
   begin

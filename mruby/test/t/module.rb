@@ -494,6 +494,18 @@ end
 
 # Not ISO specified
 
+assert('Module#define_method') do
+  c = Class.new {
+    define_method(:m1) { :ok }
+    define_method(:m2, Proc.new { :ok })
+  }
+  assert_equal c.new.m1, :ok
+  assert_equal c.new.m2, :ok
+  assert_raise(TypeError) do
+    Class.new { define_method(:n1, nil) }
+  end
+end
+
 # @!group prepend
   assert('Module#prepend') do
     module M0
@@ -836,4 +848,15 @@ end
 assert('module with non-class/module outer raises TypeError') do
   assert_raise(TypeError) { module 0::M1 end }
   assert_raise(TypeError) { module []::M2 end }
+end
+
+assert('get constant of parent module in singleton class; issue #3568') do
+  actual = module GetConstantInSingletonTest
+    EXPECTED = "value"
+    class << self
+      EXPECTED
+    end
+  end
+
+  assert_equal("value", actual)
 end

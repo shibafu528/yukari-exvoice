@@ -7,6 +7,23 @@
 #ifndef MRUBYCONF_H
 #define MRUBYCONF_H
 
+#include <limits.h>
+#include <stdint.h>
+
+/* architecture selection: */
+/* specify -DMRB_32BIT or -DMRB_64BIT to override */
+#if !defined(MRB_32BIT) && !defined(MRB_64BIT)
+#if UINT64_MAX == SIZE_MAX
+#define MRB_64BIT
+#else
+#define MRB_32BIT
+#endif
+#endif
+
+#if defined(MRB_32BIT) && defined(MRB_64BIT)
+#error Cannot build for 32 and 64 bit architecture at the same time
+#endif
+
 /* configuration options: */
 /* add -DMRB_USE_FLOAT to use float instead of double for floating point numbers */
 //#define MRB_USE_FLOAT
@@ -15,7 +32,7 @@
 //#define MRB_INT16
 
 /* add -DMRB_INT64 to use 64bit integer for mrb_int; conflict with MRB_INT16 */
-#define MRB_INT64
+//#define MRB_INT64
 
 /* represent mrb_value in boxed double; conflict with MRB_USE_FLOAT */
 //#define MRB_NAN_BOXING
@@ -27,7 +44,7 @@
 //#define MRB_WORD_BOXING
 
 /* string class to handle UTF-8 encoding */
-#define MRB_UTF8_STRING
+//#define MRB_UTF8_STRING
 
 /* argv max size in mrb_funcall */
 //#define MRB_FUNCALL_ARGC_MAX 16

@@ -301,6 +301,17 @@ assert('Array#to_h') do
   assert_raise(ArgumentError) { [[1]].to_h }
 end
 
+assert('Array#to_h (Modified)') do
+  class A
+    def to_ary
+      $a.clear
+      nil
+    end
+  end
+  $a = [A.new]
+  assert_raise(TypeError) { $a.to_h }
+end
+
 assert("Array#index (block)") do
   assert_nil (1..10).to_a.index { |i| i % 5 == 0 and i % 7 == 0 }
   assert_equal 34, (1..100).to_a.index { |i| i % 5 == 0 and i % 7 == 0 }
@@ -316,4 +327,28 @@ assert("Array#dig") do
   assert_equal(1, h.dig(0, 0, 0))
   assert_nil(h.dig(2, 0))
   assert_raise(TypeError) {h.dig(:a)}
+end
+
+assert("Array#slice!") do
+  a = [1, 2, 3]
+  b = a.slice!(0)
+  c = [1, 2, 3, 4, 5]
+  d = c.slice!(0, 2)
+  e = [1, 2, 3, 4, 5]
+  f = e.slice!(1..3)
+  g = [1, 2, 3]
+  h = g.slice!(-1)
+  i = [1, 2, 3]
+  j = i.slice!(0, -1)
+
+  assert_equal(a, [2, 3])
+  assert_equal(b, 1)
+  assert_equal(c, [3, 4, 5])
+  assert_equal(d, [1, 2])
+  assert_equal(e, [1, 5])
+  assert_equal(f, [2, 3, 4])
+  assert_equal(g, [1, 2])
+  assert_equal(h, 3)
+  assert_equal(i, [1, 2, 3])
+  assert_equal(j, nil)
 end
