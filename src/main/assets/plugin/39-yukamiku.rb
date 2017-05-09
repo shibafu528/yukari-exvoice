@@ -3,6 +3,7 @@ Android.require_assets 'yukamiku/mikuenv.rb'
 Android.require_assets 'yukamiku/user.rb'
 Android.require_assets 'yukamiku/message.rb'
 Android.require_assets 'yukamiku/gui.rb'
+Android.require_assets 'yukamiku/gtk.rb'
 Android.require_assets 'yukamiku/service.rb'
 Android.require_assets 'yukamiku/userconfig.rb'
 
