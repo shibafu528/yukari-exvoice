@@ -2,11 +2,7 @@
 # Yukari; exVoice
 # mrubyとPluggaloidを使用したモバイル向けプラグインサブシステム
 
-class String
-  def ascii_only?
-    !(self =~ /[^\x00-\x7f]/)
-  end unless method_defined? :ascii_only?
-end
+Android.require_assets 'avoid.rb'
 
 def bootstrap
   # Initialize Pluggaloid
