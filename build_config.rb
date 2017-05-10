@@ -33,6 +33,7 @@ configure = -> (conf) {
   conf.gem :github => 'mattn/mruby-json'
   conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
   conf.gem :github => 'iij/mruby-io'
+  conf.gem :github => 'iij/mruby-dir'
   conf.gem :github => 'iij/mruby-require'
 
   conf.cc.defines << %w(MRB_INT64 MRB_UTF8_STRING)
