@@ -4,30 +4,6 @@
 
 Android.require_assets 'avoid.rb'
 
-def bootstrap
-  # Initialize Pluggaloid
-  Delayer.default = Delayer.generate_class(priority: [:high, :normal, :low], default: :normal)
-  include Pluggaloid
-
-  # Find bundle plugins
-  plugins = []
-  Android::AssetDir.open('plugin').each do |path|
-    plugins << path if path.end_with? '.rb'
-  end
-
-  # Load bundle plugins
-  plugins.sort.each do |path|
-    puts "Require: #{path}"
-    Android.require_assets path
-  end
-
-  # Initialize global variables
-  $tick_counter = 0
-
-  # Call :boot event
-  Plugin.call :boot
-end
-
 def tick
   begin
     $last_ticked ||= Time.now
@@ -51,7 +27,27 @@ def tick
 end
 
 begin
-  bootstrap
+  # Initialize Pluggaloid
+  Delayer.default = Delayer.generate_class(priority: [:high, :normal, :low], default: :normal)
+  include Pluggaloid
+
+  # Find bundle plugins
+  plugins = []
+  Android::AssetDir.open('plugin').each do |path|
+    plugins << path if path.end_with? '.rb'
+  end
+
+  # Load bundle plugins
+  plugins.sort.each do |path|
+    puts "Require: #{path}"
+    Android.require_assets path
+  end
+
+  # Initialize global variables
+  $tick_counter = 0
+
+  # Call :boot event
+  Plugin.call :boot
   puts 'welcome to yukari-exvoice'
 rescue Exception => e
   puts e.inspect
