@@ -8,6 +8,11 @@
 #include "jni_common.h"
 #include "jni_converter.h"
 #include "exvoice_Android.h"
+#include "exvoice_ConfigLoader.h"
+
+#define EXVOICE_INITIALIZERS(mrb) \
+    exvoice_init_android(mrb); \
+    exvoice_init_configloader(mrb);
 
 #define MRB_INSTANCE_STORE_SIZE 16
 static MRubyInstance instances[MRB_INSTANCE_STORE_SIZE] = {};
@@ -88,7 +93,9 @@ JNIEXPORT jlong JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1open(JNIEnv
     mrb_define_module_function(mrb, mrb->kernel_module, "__printstr__", mrb_printstr, MRB_ARGS_REQ(1));
 
     // Initialize Objects
-    exvoice_init_android(mrb);
+    int arenaIndex = mrb_gc_arena_save(mrb);
+    EXVOICE_INITIALIZERS(mrb);
+    mrb_gc_arena_restore(mrb, arenaIndex);
 
     // Store instances
     storeMRubyInstance(mrb, self);

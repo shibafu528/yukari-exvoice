@@ -24,14 +24,18 @@ public class MRuby {
     private PrintCallback printCallback;
     private Map<String, Plugin> plugins = new HashMap<>();
 
+    private ConfigLoader configLoader;
+
     /**
      * MRubyのVMを初期化し、使用可能な状態にします。
      * @param context
      */
     public MRuby(Context context) {
-        mrubyInstancePointer = n_open();
+        this.mrubyInstancePointer = n_open();
         this.context = context;
         this.assetManager = context.getAssets();
+
+        this.configLoader = new ConfigLoader(this);
     }
 
     /**

@@ -63,3 +63,20 @@ module Kernel
     end
   end
 end
+
+# ================
+
+# freeze周りを定義
+# Kernel#freezeは存在しているのだけど、freezable?とfrozen?は存在してない。
+# 本来はちゃんとフラグをC関数で確認すべきだけど、今はとりあえず雑に処理する。
+module Kernel
+
+  def freezable?
+    false
+  end
+
+  def frozen?
+    false
+  end
+
+end

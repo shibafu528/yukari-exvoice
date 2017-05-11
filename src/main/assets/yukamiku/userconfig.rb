@@ -2,15 +2,22 @@
 
 # UserConfig互換クラス
 class UserConfig
-  # 今はなにもまともに保持しない
+  include Singleton
+  include ConfigLoader
 
-  @@store = {}
+  class << self
 
-  def self.[](key)
-    @@store[key]
-  end
+    def include?(key)
+      UserConfig.instance.include?(key)
+    end
 
-  def self.[]=(key, value)
-    @@store[key] = value
+    def [](key)
+      UserConfig.instance.at(key)
+    end
+
+    def []=(key, value)
+      UserConfig.instance.store(key, value)
+    end
+
   end
 end

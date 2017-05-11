@@ -35,6 +35,7 @@ configure = -> (conf) {
   conf.gem :github => 'iij/mruby-io'
   conf.gem :github => 'iij/mruby-dir'
   conf.gem :github => 'iij/mruby-require'
+  conf.gem :github => 'ksss/mruby-singleton'
 
   conf.cc.defines << %w(MRB_INT64 MRB_UTF8_STRING)
 }
