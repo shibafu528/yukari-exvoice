@@ -5,7 +5,7 @@
 #include <mruby/string.h>
 #include <mruby/proc.h>
 #include <stddef.h>
-#include "MRuby.h"
+#include "jni_MRuby.h"
 
 static jfieldID boolean_TRUE = NULL;
 static jfieldID boolean_FALSE = NULL;

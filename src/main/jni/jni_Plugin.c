@@ -8,9 +8,9 @@
 #include <mruby/error.h>
 #include <stddef.h>
 #include <android/log.h>
-#include "MRuby.h"
-#include "jni_converter.h"
-#include "jni_common.h"
+#include "jni_MRuby.h"
+#include "converter.h"
+#include "common.h"
 
 static inline jobject getField_Plugin_mRuby(JNIEnv *env, jobject self) {
     static jfieldID field_Plugin_mRuby = NULL;

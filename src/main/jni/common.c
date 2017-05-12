@@ -4,7 +4,7 @@
 #include <android/log.h>
 #include <android/asset_manager.h>
 #include <android/asset_manager_jni.h>
-#include "MRuby.h"
+#include "jni_MRuby.h"
 
 JavaVM *g_jvm;
 

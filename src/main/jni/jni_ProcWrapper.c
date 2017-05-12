@@ -8,9 +8,9 @@
 #include <mruby/error.h>
 #include <stddef.h>
 #include <android/log.h>
-#include "MRuby.h"
-#include "jni_converter.h"
-#include "jni_common.h"
+#include "jni_MRuby.h"
+#include "converter.h"
+#include "common.h"
 
 static inline jlong getField_ProcWrapper_rProcPointer(JNIEnv *env, jobject self) {
     static jfieldID field_ProcWrapper_rProcPointer = NULL;

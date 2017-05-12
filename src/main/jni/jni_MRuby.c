@@ -4,11 +4,11 @@
 #include <mruby/compile.h>
 #include <mruby/string.h>
 #include <android/log.h>
-#include "MRuby.h"
-#include "jni_common.h"
-#include "jni_converter.h"
-#include "exvoice_Android.h"
-#include "exvoice_ConfigLoader.h"
+#include "jni_MRuby.h"
+#include "common.h"
+#include "converter.h"
+#include "mrb_Android.h"
+#include "mrb_ConfigLoader.h"
 
 #define EXVOICE_INITIALIZERS(mrb) \
     exvoice_init_android(mrb); \

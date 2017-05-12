@@ -2,8 +2,8 @@
 #include <mruby.h>
 #include <mruby/variable.h>
 #include <mruby/class.h>
-#include "jni_common.h"
-#include "jni_converter.h"
+#include "common.h"
+#include "converter.h"
 
 static jmethodID configLoader_containsKey = NULL;
 static jmethodID configLoader_getInt = NULL;

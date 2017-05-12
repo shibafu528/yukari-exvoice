@@ -2,8 +2,8 @@
 // Created by shibafu on 2016/04/03.
 //
 
-#ifndef YUKARI_EXVOICE_JNI_COMMON_H
-#define YUKARI_EXVOICE_JNI_COMMON_H
+#ifndef YUKARI_EXVOICE_COMMON_H
+#define YUKARI_EXVOICE_COMMON_H
 
 #include <jni.h>
 #include <android/asset_manager.h>
@@ -14,4 +14,4 @@ JNIEnv* getJNIEnv();
 jobject getContext(mrb_state *mrb);
 AAssetManager* getAAssetManager(mrb_state *mrb);
 
-#endif //YUKARI_EXVOICE_JNI_COMMON_H
+#endif //YUKARI_EXVOICE_COMMON_H

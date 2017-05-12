@@ -1,14 +1,11 @@
-//
-// Created by shibafu on 2016/04/03.
-//
 #include <mruby.h>
 #include <mruby/string.h>
 #include <mruby/compile.h>
 #include <android/asset_manager.h>
 #include <stdlib.h>
-#include "exvoice_Android_Log.h"
-#include "exvoice_Android_AssetDir.h"
-#include "jni_common.h"
+#include "mrb_Android_Log.h"
+#include "mrb_Android_AssetDir.h"
+#include "common.h"
 
 static mrb_value require_assets(mrb_state *mrb, mrb_value self) {
     mrb_value filename;

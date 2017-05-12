@@ -4,7 +4,7 @@
 #include <mruby/class.h>
 #include <mruby/variable.h>
 #include <android/asset_manager.h>
-#include "jni_common.h"
+#include "common.h"
 
 static void assetdir_free(mrb_state *mrb, void *ptr) {
     AAssetDir *dir = ptr;

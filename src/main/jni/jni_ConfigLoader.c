@@ -1,8 +1,8 @@
 #include <jni.h>
 #include <mruby.h>
 #include <mruby/variable.h>
-#include "MRuby.h"
-#include "jni_generator.h"
+#include "jni_MRuby.h"
+#include "generator.h"
 
 OBJECT_FIELD_READER(getField_ConfigLoader_mRuby, mRuby, "Linfo/shibafu528/yukari/exvoice/MRuby;");
 

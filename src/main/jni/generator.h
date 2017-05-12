@@ -1,5 +1,5 @@
-#ifndef YUKARI_EXVOICE_JNI_GENERATOR_H
-#define YUKARI_EXVOICE_JNI_GENERATOR_H
+#ifndef YUKARI_EXVOICE_GENERATOR_H
+#define YUKARI_EXVOICE_GENERATOR_H
 
 #include <jni.h>
 
@@ -14,4 +14,4 @@ static inline jobject funcName (JNIEnv *env, jobject self) { \
     return (*env)->GetObjectField(env, self, fid); \
 }
 
-#endif //YUKARI_EXVOICE_JNI_GENERATOR_H
+#endif //YUKARI_EXVOICE_GENERATOR_H
