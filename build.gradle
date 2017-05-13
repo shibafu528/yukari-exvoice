@@ -27,7 +27,7 @@ android {
         externalNativeBuild {
             cmake {
                 arguments "-DANDROID_DISABLE_FORMAT_STRING_CHECKS=TRUE"
-                cFlags "-std=c99"
+                cFlags "-std=c11"
                 cppFlags "-std=c++11"
             }
         }
