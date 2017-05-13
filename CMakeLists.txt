@@ -20,8 +20,9 @@ endif()
 
 link_directories(mruby/build/${MRUBY_ARCH}/lib)
 
-file(GLOB jni_sources "src/main/jni/*.c")
-add_library(exvoice SHARED ${jni_sources})
+file(GLOB jni_c_sources "src/main/jni/*.c")
+file(GLOB jni_cpp_sources "src/main/jni/*.cpp")
+add_library(exvoice SHARED ${jni_c_sources} ${jni_cpp_sources})
 
 target_link_libraries(exvoice android log mruby)
 
