@@ -118,12 +118,17 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1close(JNIEnv
     mrb_close((mrb_state*) mrb);
 }
 
-JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1loadString(JNIEnv *env, jobject self, jlong mrb, jstring code, jboolean echo) {
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1loadString(JNIEnv *env, jobject self, jlong pMrb, jstring code, jboolean echo) {
+    mrb_state *mrb = (mrb_state*) pMrb;
     const char *codeBytes = (*env)->GetStringUTFChars(env, code, NULL);
     if (echo == JNI_TRUE) {
         __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "mrb_load_string\n%s", codeBytes);
     }
-    mrb_load_string((mrb_state*) mrb, codeBytes);
+
+    int arenaIndex = mrb_gc_arena_save(mrb);
+    mrb_load_string(mrb, codeBytes);
+    mrb_gc_arena_restore(mrb, arenaIndex);
+
     (*env)->ReleaseStringUTFChars(env, code, codeBytes);
 }
 
