@@ -27,6 +27,7 @@ configure = -> (conf) {
   conf.gem :core => 'mruby-kernel-ext'
 
   # exvoice dependencies
+  conf.gem :github => 'shibafu528/mruby-delayer-deferred', :branch => 'mruby'
   conf.gem :github => 'shibafu528/mruby-pluggaloid'
   conf.gem :github => 'shibafu528/mruby-diva', :branch => 'mruby'
   conf.gem :github => 'matsumoto-r/mruby-sleep'
