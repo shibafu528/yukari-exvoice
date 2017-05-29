@@ -224,6 +224,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_call(JNIEnv *e
     (*env)->MonitorEnter(env, mutex);
 
     mrb_state *mrb = getField_MRuby_mrubyInstancePointer(env, mRuby);
+    int arenaIndex = mrb_gc_arena_save(mrb);
 
     struct RClass *plugin = mrb_class_get_under(mrb, mrb_module_get(mrb, "Pluggaloid"), "Plugin");
 
@@ -252,6 +253,8 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_call(JNIEnv *e
         mrb->exc = 0;
     }
 
+    mrb_gc_arena_restore(mrb, arenaIndex);
+
     (*env)->MonitorExit(env, mutex);
     (*env)->DeleteLocalRef(env, mutex);
 }
@@ -261,6 +264,7 @@ JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_filter
     (*env)->MonitorEnter(env, mutex);
 
     mrb_state *mrb = getField_MRuby_mrubyInstancePointer(env, mRuby);
+    int arenaIndex = mrb_gc_arena_save(mrb);
 
     struct RClass *plugin = mrb_class_get_under(mrb, mrb_module_get(mrb, "Pluggaloid"), "Plugin");
 
@@ -317,6 +321,8 @@ JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_filter
         mrb_value v = mrb_ary_ref(mrb, filteringResult, i);
         (*env)->SetObjectArrayElement(env, results, i, convertMrbValueToJava(env, mrb, v));
     }
+
+    mrb_gc_arena_restore(mrb, arenaIndex);
 
     (*env)->MonitorExit(env, mutex);
     (*env)->DeleteLocalRef(env, mutex);
