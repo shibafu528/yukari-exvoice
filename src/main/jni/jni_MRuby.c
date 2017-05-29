@@ -139,3 +139,14 @@ JNIEXPORT jobject JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1callTopLe
     (*env)->ReleaseStringUTFChars(env, name, cName);
     return convertMrbValueToJava(env, mrb, returnValue);
 }
+
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1callTopLevelProc(JNIEnv *env, jobject self, jlong pMrb, jstring name) {
+    mrb_state *mrb = (mrb_state*) pMrb;
+    const char *cName = (*env)->GetStringUTFChars(env, name, NULL);
+
+    int arenaIndex = mrb_gc_arena_save(mrb);
+    mrb_funcall(mrb, mrb_obj_value(mrb->top_self), cName, 0, NULL);
+    mrb_gc_arena_restore(mrb, arenaIndex);
+
+    (*env)->ReleaseStringUTFChars(env, name, cName);
+}

@@ -80,6 +80,16 @@ public class MRuby {
     }
 
     /**
+     * 指定の名前のメソッドをトップレベルから検索し実行します。
+     * @param name メソッド名
+     */
+    public void callTopLevelProc(String name) {
+        synchronized (mutex) {
+            n_callTopLevelProc(mrubyInstancePointer, name);
+        }
+    }
+
+    /**
      * プラグインを登録し、使用可能な状態にします。
      * @param clazz プラグインクラス
      */
@@ -132,6 +142,7 @@ public class MRuby {
 
     private native void n_loadString(long mrb, String code, boolean echo);
     private native Object n_callTopLevelFunc(long mrb, String name);
+    private native void n_callTopLevelProc(long mrb, String name);
 
     public interface PrintCallback {
         void print(String value);
