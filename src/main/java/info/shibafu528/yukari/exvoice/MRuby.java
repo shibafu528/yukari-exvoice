@@ -121,12 +121,12 @@ public class MRuby {
         }
     }
 
-    /*package*/ Object getMutex() {
-        return mutex;
+    public long getMRubyInstancePointer() {
+        return mrubyInstancePointer;
     }
 
-    /*package*/ long getMRubyInstancePointer() {
-        return mrubyInstancePointer;
+    /*package*/ Object getMutex() {
+        return mutex;
     }
 
     /*package*/ Context getContext() {
