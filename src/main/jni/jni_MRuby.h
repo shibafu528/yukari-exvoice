@@ -34,7 +34,7 @@ static inline mrb_state* getField_MRuby_mrubyInstancePointer(JNIEnv *env, jobjec
 static inline jobject call_MRuby_getPlugin(JNIEnv *env, jobject mRubyObject, jstring slug) {
     if (method_MRuby_getPlugin == NULL) {
         jclass mRubyClass = (*env)->GetObjectClass(env, mRubyObject);
-        method_MRuby_getPlugin = (*env)->GetMethodID(env, mRubyClass, "getPlugin", "(Ljava/lang/String;)Linfo/shibafu528/yukari/exvoice/Plugin;");
+        method_MRuby_getPlugin = (*env)->GetMethodID(env, mRubyClass, "getPlugin", "(Ljava/lang/String;)Linfo/shibafu528/yukari/exvoice/pluggaloid/Plugin;");
 
         (*env)->DeleteLocalRef(env, mRubyClass);
     }

@@ -11,28 +11,10 @@
 #include "jni_MRuby.h"
 #include "converter.h"
 #include "common.h"
+#include "generator.h"
 
-static inline jobject getField_Plugin_mRuby(JNIEnv *env, jobject self) {
-    static jfieldID field_Plugin_mRuby = NULL;
-    if (field_Plugin_mRuby == NULL) {
-        jclass selfClass = (*env)->GetObjectClass(env, self);
-        field_Plugin_mRuby = (*env)->GetFieldID(env, selfClass, "mRuby", "Linfo/shibafu528/yukari/exvoice/MRuby;");
-
-        (*env)->DeleteLocalRef(env, selfClass);
-    }
-    return (*env)->GetObjectField(env, self, field_Plugin_mRuby);
-}
-
-static inline jobject getField_Plugin_slug(JNIEnv *env, jobject self) {
-    static jfieldID field_Plugin_slug = NULL;
-    if (field_Plugin_slug == NULL) {
-        jclass selfClass = (*env)->GetObjectClass(env, self);
-        field_Plugin_slug = (*env)->GetFieldID(env, selfClass, "slug", "Ljava/lang/String;");
-
-        (*env)->DeleteLocalRef(env, selfClass);
-    }
-    return (*env)->GetObjectField(env, self, field_Plugin_slug);
-}
+OBJECT_FIELD_READER(getField_Plugin_mRuby, mRuby, JSIG_EXVOICE_MRUBY)
+OBJECT_FIELD_READER(getField_Plugin_slug, slug, JSIG_STRING)
 
 static inline void call_Plugin_onEvent(JNIEnv *env, jobject self, jstring eventName, jobjectArray args) {
     static jmethodID method_Plugin_onEvent = NULL;
@@ -64,15 +46,7 @@ static inline mrb_sym convertJstringToSymbol(JNIEnv *env, mrb_state *mrb, jstrin
     return sym;
 }
 
-static inline mrb_value convertJstringToString(JNIEnv *env, mrb_state *mrb, jstring str) {
-    const char *cstr = (*env)->GetStringUTFChars(env, str, NULL);
-    mrb_value rstr = mrb_str_new_cstr(mrb, cstr);
-    (*env)->ReleaseStringUTFChars(env, str, cstr);
-
-    return rstr;
-}
-
-JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_initializeNative(JNIEnv *env, jobject self) {
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_initializeNative(JNIEnv *env, jobject self) {
     // Get mrb_state
     jobject mRubyObject = getField_Plugin_mRuby(env, self);
     mrb_state *mrb = getField_MRuby_mrubyInstancePointer(env, mRubyObject);
@@ -107,7 +81,7 @@ static mrb_value addEventListener_callback(mrb_state *mrb, mrb_value self) {
     mrb_int rArgc;
     mrb_get_args(mrb, "*", &rArgs, &rArgc);
 
-    jclass objectClass = (*env)->FindClass(env, "java/lang/Object");
+    jclass objectClass = (*env)->FindClass(env, JCLASS_OBJECT);
     jobjectArray jArgs = (*env)->NewObjectArray(env, rArgc, objectClass, NULL);
     for (int i = 0; i < rArgc; i++) {
         (*env)->SetObjectArrayElement(env, jArgs, i, convertMrbValueToJava(env, mrb, rArgs[i]));
@@ -124,7 +98,7 @@ static mrb_value addEventListener_callback(mrb_state *mrb, mrb_value self) {
     return mrb_nil_value();
 }
 
-JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_addEventListenerNative(JNIEnv *env, jobject self, jstring eventName) {
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_addEventListenerNative(JNIEnv *env, jobject self, jstring eventName) {
     // Get mrb_state
     jobject mRubyObject = getField_Plugin_mRuby(env, self);
     mrb_state *mrb = getField_MRuby_mrubyInstancePointer(env, mRubyObject);
@@ -168,7 +142,7 @@ static mrb_value addEventFilter_callback(mrb_state *mrb, mrb_value self) {
     mrb_int rArgc;
     mrb_get_args(mrb, "*", &rArgs, &rArgc);
 
-    jclass objectClass = (*env)->FindClass(env, "java/lang/Object");
+    jclass objectClass = (*env)->FindClass(env, JCLASS_OBJECT);
     jobjectArray jArgs = (*env)->NewObjectArray(env, rArgc, objectClass, NULL);
     for (int i = 0; i < rArgc; i++) {
         (*env)->SetObjectArrayElement(env, jArgs, i, convertMrbValueToJava(env, mrb, rArgs[i]));
@@ -187,7 +161,7 @@ static mrb_value addEventFilter_callback(mrb_state *mrb, mrb_value self) {
     return rResult;
 }
 
-JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_addEventFilterNative(JNIEnv *env, jobject self, jstring eventName) {
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_addEventFilterNative(JNIEnv *env, jobject self, jstring eventName) {
     // Get mrb_state
     jobject mRubyObject = getField_Plugin_mRuby(env, self);
     mrb_state *mrb = getField_MRuby_mrubyInstancePointer(env, mRubyObject);
@@ -219,7 +193,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_addEventFilter
     (*env)->DeleteLocalRef(env, mRubyObject);
 }
 
-JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_call(JNIEnv *env, jclass clazz, jobject mRuby, jstring eventName, jobjectArray args) {
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_call(JNIEnv *env, jclass clazz, jobject mRuby, jstring eventName, jobjectArray args) {
     jobject mutex = call_MRuby_getMutex(env, mRuby);
     (*env)->MonitorEnter(env, mutex);
 
@@ -244,7 +218,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_call(JNIEnv *e
     mrb_free(mrb, rArgs);
 
     if (mrb_exception_p(result)) {
-        jclass runtimeExceptionClass = (*env)->FindClass(env, "info/shibafu528/yukari/exvoice/MRubyException");
+        jclass runtimeExceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
         mrb_value ins = mrb_inspect(mrb, result);
         (*env)->ThrowNew(env, runtimeExceptionClass, mrb_str_to_cstr(mrb, ins));
 
@@ -259,7 +233,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_call(JNIEnv *e
     (*env)->DeleteLocalRef(env, mutex);
 }
 
-JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_filtering(JNIEnv *env, jclass clazz, jobject mRuby, jstring eventName, jobjectArray args) {
+JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_filtering(JNIEnv *env, jclass clazz, jobject mRuby, jstring eventName, jobjectArray args) {
     jobject mutex = call_MRuby_getMutex(env, mRuby);
     (*env)->MonitorEnter(env, mutex);
 
@@ -286,13 +260,13 @@ JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_filter
     if (mrb_exception_p(filteringResult)) {
         struct RClass *filterError = mrb_class_get_under(mrb, mrb_module_get(mrb, "Pluggaloid"), "FilterError");
         if (mrb_exc_ptr(filteringResult)->c == filterError) {
-            jclass exceptionClass = (*env)->FindClass(env, "info/shibafu528/yukari/exvoice/FilterException");
+            jclass exceptionClass = (*env)->FindClass(env, NS_EXVOICE "pluggaloid/FilterException");
             mrb_value ins = mrb_inspect(mrb, filteringResult);
             (*env)->ThrowNew(env, exceptionClass, mrb_str_to_cstr(mrb, ins));
 
             (*env)->DeleteLocalRef(env, exceptionClass);
         } else {
-            jclass runtimeExceptionClass = (*env)->FindClass(env, "info/shibafu528/yukari/exvoice/MRubyException");
+            jclass runtimeExceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
             mrb_value ins = mrb_inspect(mrb, filteringResult);
             (*env)->ThrowNew(env, runtimeExceptionClass, mrb_str_to_cstr(mrb, ins));
 
@@ -310,7 +284,7 @@ JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_Plugin_filter
     mrb_int resultLength = RARRAY_LEN(filteringResult);
     jobjectArray results;
     {
-        jclass objectClass = (*env)->FindClass(env, "java/lang/Object");
+        jclass objectClass = (*env)->FindClass(env, JCLASS_OBJECT);
         results = (*env)->NewObjectArray(env, resultLength, objectClass, NULL);
 
         (*env)->DeleteLocalRef(env, objectClass);

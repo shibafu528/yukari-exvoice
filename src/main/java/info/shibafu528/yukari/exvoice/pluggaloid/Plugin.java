@@ -1,8 +1,10 @@
-package info.shibafu528.yukari.exvoice;
+package info.shibafu528.yukari.exvoice.pluggaloid;
 
 import android.content.Context;
 import android.text.TextUtils;
 import android.util.Log;
+import info.shibafu528.yukari.exvoice.MRuby;
+import info.shibafu528.yukari.exvoice.MRubyException;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

@@ -1,4 +1,4 @@
-package info.shibafu528.yukari.exvoice;
+package info.shibafu528.yukari.exvoice.pluggaloid;
 
 /**
  * {@code Pluggaloid::FilterError} に対応する例外です。

@@ -3,6 +3,7 @@ package info.shibafu528.yukari.exvoice;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
+import info.shibafu528.yukari.exvoice.pluggaloid.Plugin;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -125,15 +126,15 @@ public class MRuby {
         return mrubyInstancePointer;
     }
 
-    /*package*/ Object getMutex() {
-        return mutex;
-    }
-
-    /*package*/ Context getContext() {
+    public Context getContext() {
         return context;
     }
 
-    /*package*/ Plugin getPlugin(String slug) {
+    public Object getMutex() {
+        return mutex;
+    }
+
+    public Plugin getPlugin(String slug) {
         return plugins.get(slug);
     }
 

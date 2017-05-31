@@ -44,6 +44,11 @@ public class ProcWrapper implements MRubyPointer {
         }
     }
 
+    @Override
+    public long getPointer() {
+        return rProcPointer;
+    }
+
     public void dispose() {
         if (!disposed && mRuby != null && mRuby.getMRubyInstancePointer() != 0) {
             disposeNative(mRuby.getMRubyInstancePointer());

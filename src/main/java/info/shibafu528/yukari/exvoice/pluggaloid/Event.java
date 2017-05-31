@@ -1,4 +1,4 @@
-package info.shibafu528.yukari.exvoice;
+package info.shibafu528.yukari.exvoice.pluggaloid;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
