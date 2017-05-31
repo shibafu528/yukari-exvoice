@@ -5,7 +5,7 @@ package info.shibafu528.yukari.exvoice;
  *
  * Created by shibafu on 2016/05/05.
  */
-public class ProcWrapper implements Disposable {
+public class ProcWrapper implements MRubyPointer {
 
     private MRuby mRuby;
     private long rProcPointer;

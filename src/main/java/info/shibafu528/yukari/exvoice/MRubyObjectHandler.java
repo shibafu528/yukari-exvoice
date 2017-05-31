@@ -13,7 +13,7 @@ import java.util.Map;
  *
  * Created by shibafu on 2017/05/30.
  */
-public class MRubyObjectHandler implements InvocationHandler, Disposable {
+public class MRubyObjectHandler implements InvocationHandler, MRubyPointer {
     private static final Map<String, String> JAVA_TO_RUBY_METHOD_CONVERT_MAP = new HashMap<>();
 
     static {
@@ -47,14 +47,19 @@ public class MRubyObjectHandler implements InvocationHandler, Disposable {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         final String methodName = method.getName();
-        if ("dispose".equals(methodName)) {
-            dispose();
-            return null;
+        if (method.getDeclaringClass() == MRubyPointer.class) {
+            return method.invoke(this, args);
         } else {
             return invokeNative(mRuby.getMRubyInstancePointer(), mrbObjectPointer, convertMethodNameToRuby(methodName), args);
         }
     }
 
+    @Override
+    public long getPointer() {
+        return mrbObjectPointer;
+    }
+
+    @Override
     public void dispose() {
         if (!disposed && mRuby != null && mRuby.getMRubyInstancePointer() != 0) {
             disposeNative(mRuby.getMRubyInstancePointer(), mrbObjectPointer);

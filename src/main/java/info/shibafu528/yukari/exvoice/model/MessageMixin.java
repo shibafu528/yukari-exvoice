@@ -1,11 +1,13 @@
-package info.shibafu528.yukari.exvoice.diva;
+package info.shibafu528.yukari.exvoice.model;
+
+import info.shibafu528.yukari.exvoice.diva.Model;
 
 import javax.annotation.Nullable;
 
 /**
  * Created by shibafu on 2017/05/30.
  */
-public interface Message extends Model {
+public interface MessageMixin extends Model {
     boolean isMentionedByMe();
 
     /*Deferred*/ Object favorite(boolean fav);
@@ -21,6 +23,4 @@ public interface Message extends Model {
     @Nullable Model getRetweetSource(boolean forceRetrieve);
 
     boolean isQuoting();
-
-    
 }
