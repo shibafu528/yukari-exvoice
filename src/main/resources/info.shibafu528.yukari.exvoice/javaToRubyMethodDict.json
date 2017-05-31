@@ -1,5 +1,0 @@
-{
-  "equals": "==",
-  "toString": "to_s",
-  "compareTo": "<=>"
-}

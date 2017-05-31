@@ -1,14 +1,11 @@
 package info.shibafu528.yukari.exvoice;
 
 import com.google.common.base.CaseFormat;
-import com.google.gson.Gson;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -17,18 +14,12 @@ import java.util.Map;
  * Created by shibafu on 2017/05/30.
  */
 public class MRubyObjectHandler implements InvocationHandler, Disposable {
-    private static final Map<String, String> JAVA_TO_RUBY_METHOD_CONVERT_MAP;
+    private static final Map<String, String> JAVA_TO_RUBY_METHOD_CONVERT_MAP = new HashMap<>();
 
     static {
-        InputStream is = MRubyObjectHandler.class.getResourceAsStream("info.shibafu528.yukari.exvoice/javaToRubyMethodDict.json");
-        try {
-            //noinspection unchecked
-            JAVA_TO_RUBY_METHOD_CONVERT_MAP = new Gson().fromJson(new InputStreamReader(is), Map.class);
-        } finally {
-            try {
-                is.close();
-            } catch (IOException ignored) {}
-        }
+        JAVA_TO_RUBY_METHOD_CONVERT_MAP.put("equals", "==");
+        JAVA_TO_RUBY_METHOD_CONVERT_MAP.put("toString", "to_s");
+        JAVA_TO_RUBY_METHOD_CONVERT_MAP.put("compareTo", "<=>");
     }
 
     private MRuby mRuby;
