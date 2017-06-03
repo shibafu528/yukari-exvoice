@@ -6,6 +6,7 @@
 #include <mruby/proc.h>
 #include <stddef.h>
 #include "jni_MRuby.h"
+#include "generator.h"
 
 static jfieldID boolean_TRUE = NULL;
 static jfieldID boolean_FALSE = NULL;
@@ -29,6 +30,8 @@ static jmethodID iterator_next = NULL;
 
 static jmethodID procWrapper_constructor = NULL;
 
+static jmethodID mrubyPointer_getPointer = NULL;
+
 mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
     mrb_value result = mrb_nil_value();
 
@@ -39,6 +42,7 @@ mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
     jclass doubleClass = (*env)->FindClass(env, "java/lang/Double");
     jclass arrayClass = (*env)->FindClass(env, "[Ljava/lang/Object;");
     jclass mapClass = (*env)->FindClass(env, "java/util/Map");
+    jclass pointerClass = (*env)->FindClass(env, NS_EXVOICE "MRubyPointer");
     if (obj != NULL) {
         jclass objClass = (*env)->GetObjectClass(env, obj);
 
@@ -138,6 +142,17 @@ mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
             }
             (*env)->DeleteLocalRef(env, set);
             (*env)->DeleteLocalRef(env, iterator);
+        } else if ((*env)->IsInstanceOf(env, obj, pointerClass)) {
+            // MRubyPointer to mrb_value
+            if (mrubyPointer_getPointer == NULL) {
+                jclass mrubyPointerClass = (*env)->FindClass(env, NS_EXVOICE "MRubyPointer");
+                mrubyPointer_getPointer = (*env)->GetMethodID(env, mrubyPointerClass, "getPointer", JSIG_METHOD(JSIG_LONG));
+
+                (*env)->DeleteLocalRef(env, mrubyPointerClass);
+            }
+
+            jlong ptr = (*env)->CallLongMethod(env, obj, mrubyPointer_getPointer);
+            result = mrb_obj_value((void *) ptr);
         } else {
             // Other object to String
             jmethodID toString = (*env)->GetMethodID(env, objClass, "toString", "()Ljava/lang/String;");
@@ -159,6 +174,7 @@ mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
     (*env)->DeleteLocalRef(env, doubleClass);
     (*env)->DeleteLocalRef(env, arrayClass);
     (*env)->DeleteLocalRef(env, mapClass);
+    (*env)->DeleteLocalRef(env, pointerClass);
 
     return result;
 }

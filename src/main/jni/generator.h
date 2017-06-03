@@ -25,7 +25,7 @@ static inline jobject funcName (JNIEnv *env, jobject self) { \
 #define JSIG_CHAR "C"
 #define JSIG_CLASS(fqcn) "L" fqcn ";"
 #define JSIG_ARRAY(type) "[" type
-#define JSIG_METHOD(returnType, argTypes, ...) "(" __VA_ARGS__ ")" returnType
+#define JSIG_METHOD(returnType, ...) "(" __VA_ARGS__ ")" returnType
 
 #define JCLASS_OBJECT "java/lang/Object"
 #define JCLASS_STRING "java/lang/String"
