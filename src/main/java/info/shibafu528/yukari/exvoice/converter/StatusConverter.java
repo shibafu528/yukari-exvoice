@@ -26,8 +26,8 @@ public class StatusConverter {
         values.put("in_reply_to_status_id", status.getInReplyToStatusId());
         values.put("retweet", toMessage(mRuby, status.getRetweetedStatus()));
         values.put("source", status.getSource());
-        values.put("created", status.getCreatedAt().getTime() / 1000);
-        values.put("modified", status.getCreatedAt().getTime() / 1000);
+        values.put("created", status.getCreatedAt());
+        values.put("modified", status.getCreatedAt());
         return ModelFactory.newInstance(mRuby, Message.class, "Message", values);
     }
 

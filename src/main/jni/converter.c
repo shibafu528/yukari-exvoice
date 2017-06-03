@@ -27,10 +27,10 @@ static jmethodID map_entry_getValue = NULL;
 static jmethodID set_iterator = NULL;
 static jmethodID iterator_hasNext = NULL;
 static jmethodID iterator_next = NULL;
+static jmethodID date_getTime = NULL;
+static jmethodID mrubyPointer_getPointer = NULL;
 
 static jmethodID procWrapper_constructor = NULL;
-
-static jmethodID mrubyPointer_getPointer = NULL;
 
 mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
     mrb_value result = mrb_nil_value();
@@ -42,6 +42,7 @@ mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
     jclass doubleClass = (*env)->FindClass(env, "java/lang/Double");
     jclass arrayClass = (*env)->FindClass(env, "[Ljava/lang/Object;");
     jclass mapClass = (*env)->FindClass(env, "java/util/Map");
+    jclass dateClass = (*env)->FindClass(env, "java/util/Date");
     jclass pointerClass = (*env)->FindClass(env, NS_EXVOICE "MRubyPointer");
     if (obj != NULL) {
         jclass objClass = (*env)->GetObjectClass(env, obj);
@@ -142,13 +143,20 @@ mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
             }
             (*env)->DeleteLocalRef(env, set);
             (*env)->DeleteLocalRef(env, iterator);
+        } else if ((*env)->IsInstanceOf(env, obj, dateClass)) {
+            // Date to Time
+            if (date_getTime == NULL) {
+                date_getTime = (*env)->GetMethodID(env, dateClass, "getTime", JSIG_METHOD(JSIG_LONG));
+            }
+
+            jlong jTime = (*env)->CallLongMethod(env, obj, date_getTime);
+            mrb_value mTime = mrb_fixnum_value(jTime / 1000);
+            mrb_value mUsec = mrb_fixnum_value(jTime % 1000 * 1000);
+            result = mrb_funcall(mrb, mrb_obj_value(mrb_class_get(mrb, "Time")), "at", 2, mTime, mUsec);
         } else if ((*env)->IsInstanceOf(env, obj, pointerClass)) {
             // MRubyPointer to mrb_value
             if (mrubyPointer_getPointer == NULL) {
-                jclass mrubyPointerClass = (*env)->FindClass(env, NS_EXVOICE "MRubyPointer");
-                mrubyPointer_getPointer = (*env)->GetMethodID(env, mrubyPointerClass, "getPointer", JSIG_METHOD(JSIG_LONG));
-
-                (*env)->DeleteLocalRef(env, mrubyPointerClass);
+                mrubyPointer_getPointer = (*env)->GetMethodID(env, pointerClass, "getPointer", JSIG_METHOD(JSIG_LONG));
             }
 
             jlong ptr = (*env)->CallLongMethod(env, obj, mrubyPointer_getPointer);
@@ -174,6 +182,7 @@ mrb_value convertJavaToMrbValue(JNIEnv *env, mrb_state *mrb, jobject obj) {
     (*env)->DeleteLocalRef(env, doubleClass);
     (*env)->DeleteLocalRef(env, arrayClass);
     (*env)->DeleteLocalRef(env, mapClass);
+    (*env)->DeleteLocalRef(env, dateClass);
     (*env)->DeleteLocalRef(env, pointerClass);
 
     return result;
