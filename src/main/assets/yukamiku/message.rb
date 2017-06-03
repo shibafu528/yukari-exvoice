@@ -1,8 +1,7 @@
 # encoding: utf-8
-Android.require_assets 'yukamiku/compatmodel.rb'
 
 # Message互換クラス
-class Message < Retriever::Model
+class Message < Diva::Model
 
   # args format
   # key     | value(class)
@@ -18,30 +17,29 @@ class Message < Retriever::Model
   # post    | post object(Service)
   # image   | image(URL or Image object)
 
-  self.keys = [
-      [:id, :string, true], # ID
-      [:message, :string, true], # Message description
-      [:user, User, true], # Send by user
-      [:receiver, User], # Send to user
-      [:replyto, Message], # Reply to this message
-      [:retweet, Message], # ReTweet to this message
-      [:source, :string], # using client
-      [:geo, :string], # geotag
-      [:exact, :bool], # true if complete data
-      [:created, :time], # posted time
-      [:modified, :time], # updated time
-  ]
+  field.int    :id, required: true
+  field.string :message, required: true             # Message description
+  field.has    :user, User, required: true          # Send by user
+  field.int    :in_reply_to_user_id                 # リプライ先ユーザID
+  field.has    :receiver, User                      # Send to user
+  field.int    :in_reply_to_status_id               # リプライ先ツイートID
+  field.has    :replyto, Message                    # Reply to this message
+  field.has    :retweet, Message                    # ReTweet to this message
+  field.string :source                              # using client
+  field.bool   :exact                               # true if complete data
+  field.time   :created                             # posted time
+  field.time   :modified                            # updated time
 
   def initialize(value)
     super(value)
   end
 
   def idname
-    user[:idname]
+    user.idname
   end
 
   def system?
-    self[:system]
+    false
   end
 
   def protected?
@@ -61,7 +59,7 @@ class Message < Retriever::Model
   end
 
   def has_receive_message?
-    !!self[:replyto]
+    !!(self[:replyto] || self[:in_reply_to_status_id])
   end
 
   alias reply? has_receive_message?

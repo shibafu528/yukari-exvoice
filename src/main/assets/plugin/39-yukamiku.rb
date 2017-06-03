@@ -1,5 +1,6 @@
 # encoding: utf-8
 Android.require_assets 'yukamiku/mikuenv.rb'
+Android.require_assets 'yukamiku/compatmodel.rb'
 Android.require_assets 'yukamiku/user.rb'
 Android.require_assets 'yukamiku/message.rb'
 Android.require_assets 'yukamiku/gui.rb'

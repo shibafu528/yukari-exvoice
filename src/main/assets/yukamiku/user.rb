@@ -1,8 +1,7 @@
 # encoding: utf-8
-Android.require_assets 'yukamiku/compatmodel.rb'
 
 # User互換クラス
-class User < Retriever::Model
+class User < Diva::Model
 
   # args format
   # key     | value
@@ -14,19 +13,18 @@ class User < Retriever::Model
   # detail  | detail
   # profile_image_url | icon
 
-  self.keys = [[:id, :string],
-               [:idname, :string],
-               [:name, :string],
-               [:location, :string],
-               [:detail, :string],
-               [:profile_image_url, :string],
-               [:url, :string],
-               [:protected, :bool],
-               [:verified, :bool],
-               [:followers_count, :int],
-               [:statuses_count, :int],
-               [:friends_count, :int],
-  ]
+  field.int    :id
+  field.string :idname
+  field.string :name
+  field.string :location
+  field.string :detail
+  field.string :profile_image_url
+  field.string :url
+  field.bool   :protected
+  field.bool   :verified
+  field.int    :followers_count
+  field.int    :statuses_count
+  field.int    :friends_count
 
   def self.system
     if not defined? @@system then
@@ -47,6 +45,10 @@ class User < Retriever::Model
   end
 
   alias to_s idname
+
+  def title
+    "#{idname}(#{name})"
+  end
 
   def protected?
     !!self[:protected]
