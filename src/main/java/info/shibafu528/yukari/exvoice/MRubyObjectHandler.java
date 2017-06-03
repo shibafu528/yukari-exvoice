@@ -47,8 +47,10 @@ public class MRubyObjectHandler implements InvocationHandler, MRubyPointer {
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
         final String methodName = method.getName();
-        if (method.getDeclaringClass() == MRubyPointer.class) {
+        if (method.getDeclaringClass() == MRubyPointer.class || "hashCode".equals(methodName) || "clone".equals(methodName) || "getClass".equals(methodName)) {
             return method.invoke(this, args);
+        } else if (mRuby == null || mrbObjectPointer == 0) {
+            return null;
         } else {
             return invokeNative(mRuby.getMRubyInstancePointer(), mrbObjectPointer, convertMethodNameToRuby(methodName), args);
         }
