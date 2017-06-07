@@ -63,7 +63,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_ini
     // Create Plugin
     struct RClass *pluggaloid = mrb_module_get(mrb, "Pluggaloid");
     struct RClass *plugin = mrb_class_get_under(mrb, pluggaloid, "Plugin");
-    mrb_funcall_argv(mrb, mrb_obj_value(plugin), mrb_intern_cstr(mrb, "create"), 1, &rSlug);
+    mrb_funcall_argv(mrb, mrb_obj_value(plugin), mrb_intern_lit(mrb, "create"), 1, &rSlug);
 
     // Release references
     (*env)->DeleteLocalRef(env, mRubyObject);
@@ -122,7 +122,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_add
     // Register event
     mrb_value procEnv[] = { rSlug, rEventName };
     struct RProc *proc = mrb_proc_new_cfunc_with_env(mrb, addEventListener_callback, 2, procEnv);
-    mrb_funcall_with_block(mrb, rPlugin, mrb_intern_cstr(mrb, "add_event"), 1, &rEventName, mrb_obj_value(proc));
+    mrb_funcall_with_block(mrb, rPlugin, mrb_intern_lit(mrb, "add_event"), 1, &rEventName, mrb_obj_value(proc));
 
     __android_log_print(ANDROID_LOG_DEBUG, "exvoice-Plugin", "register native event %s%s", mrb_str_to_cstr(mrb, mrb_inspect(mrb, rSlug)), mrb_str_to_cstr(mrb, mrb_inspect(mrb, rEventName)));
 
@@ -185,7 +185,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_add
     // Register filter
     mrb_value procEnv[] = { rSlug, rEventName };
     struct RProc *proc = mrb_proc_new_cfunc_with_env(mrb, addEventFilter_callback, 2, procEnv);
-    mrb_funcall_with_block(mrb, rPlugin, mrb_intern_cstr(mrb, "add_event_filter"), 1, &rEventName, mrb_obj_value(proc));
+    mrb_funcall_with_block(mrb, rPlugin, mrb_intern_lit(mrb, "add_event_filter"), 1, &rEventName, mrb_obj_value(proc));
 
     __android_log_print(ANDROID_LOG_DEBUG, "exvoice-Plugin", "register native filter %s%s", mrb_str_to_cstr(mrb, mrb_inspect(mrb, rSlug)), mrb_str_to_cstr(mrb, mrb_inspect(mrb, rEventName)));
 
@@ -214,7 +214,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_cal
     }
 
     // Call event
-    mrb_value result = mrb_funcall_argv(mrb, mrb_obj_value(plugin), mrb_intern_cstr(mrb, "call"), 1 + argc, rArgs);
+    mrb_value result = mrb_funcall_argv(mrb, mrb_obj_value(plugin), mrb_intern_lit(mrb, "call"), 1 + argc, rArgs);
     mrb_free(mrb, rArgs);
 
     if (mrb_exception_p(result)) {
@@ -254,7 +254,7 @@ JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Pl
     }
 
     // Call filtering
-    mrb_value filteringResult = mrb_funcall_argv(mrb, mrb_obj_value(plugin), mrb_intern_cstr(mrb, "filtering"), 1 + argc, rArgs);
+    mrb_value filteringResult = mrb_funcall_argv(mrb, mrb_obj_value(plugin), mrb_intern_lit(mrb, "filtering"), 1 + argc, rArgs);
     mrb_free(mrb, rArgs);
 
     if (mrb_exception_p(filteringResult)) {

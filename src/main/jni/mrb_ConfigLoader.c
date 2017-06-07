@@ -41,7 +41,7 @@ static void prepareJNIIdentifiers() {
 
 static inline jobject getModuleCV_jobjectReference(mrb_state *mrb) {
     struct RClass *configloader = mrb_module_get(mrb, "ConfigLoader");
-    mrb_value mrbVal = mrb_mod_cv_get(mrb, configloader, mrb_intern_cstr(mrb, "jobjectReference"));
+    mrb_value mrbVal = mrb_mod_cv_get(mrb, configloader, mrb_intern_lit(mrb, "jobjectReference"));
     jobject jVal = (jobject) mrb_cptr(mrbVal);
 
     return jVal;

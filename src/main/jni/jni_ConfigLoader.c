@@ -16,7 +16,7 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_ConfigLoader_initiali
 
     // Store in ConfigLoader@@jobjectReference
     struct RClass *configloader = mrb_module_get(mrb, "ConfigLoader");
-    mrb_mod_cv_set(mrb, configloader, mrb_intern_cstr(mrb, "jobjectReference"), mrb_cptr_value(mrb, gSelf));
+    mrb_mod_cv_set(mrb, configloader, mrb_intern_lit(mrb, "jobjectReference"), mrb_cptr_value(mrb, gSelf));
 
     // Release references
     (*env)->DeleteLocalRef(env, mRubyObject);

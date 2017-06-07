@@ -28,7 +28,7 @@ static mrb_value assetdir_initialize(mrb_state *mrb, mrb_value self) {
 
     DATA_TYPE(self) = &mrb_assetdir_type;
     DATA_PTR(self) = dir;
-    mrb_iv_set(mrb, self, mrb_intern_cstr(mrb, "dir_name"), dirName);
+    mrb_iv_set(mrb, self, mrb_intern_lit(mrb, "dir_name"), dirName);
     
     return self;
 }
@@ -38,7 +38,7 @@ static mrb_value assetdir_initialize(mrb_state *mrb, mrb_value self) {
  * 既に閉じられている場合であっても、例外は発しません。
  */
 static mrb_value assetdir_close(mrb_state *mrb, mrb_value self) {
-    mrb_sym symClosed = mrb_intern_cstr(mrb, "closed");
+    mrb_sym symClosed = mrb_intern_lit(mrb, "closed");
     mrb_value closed = mrb_iv_get(mrb, self, symClosed);
     AAssetDir *dir = DATA_PTR(self);
     if (!mrb_bool(closed) && dir != NULL) {
@@ -61,10 +61,10 @@ static mrb_value assetdir_each(mrb_state *mrb, mrb_value self) {
         return mrb_nil_value();
     }
 
-    mrb_value dirName = mrb_iv_get(mrb, self, mrb_intern_cstr(mrb, "dir_name"));
+    mrb_value dirName = mrb_iv_get(mrb, self, mrb_intern_lit(mrb, "dir_name"));
     mrb_str_concat(mrb, dirName, mrb_str_new_cstr(mrb, "/"));
 
-    mrb_sym symRead = mrb_intern_cstr(mrb, "read");
+    mrb_sym symRead = mrb_intern_lit(mrb, "read");
     for (mrb_value filename = mrb_funcall_argv(mrb, self, symRead, 0, NULL);
          !mrb_nil_p(filename);
          filename = mrb_funcall_argv(mrb, self, symRead, 0, NULL)) {

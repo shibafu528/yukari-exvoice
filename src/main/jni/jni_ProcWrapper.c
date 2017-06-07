@@ -48,7 +48,7 @@ JNIEXPORT jobject JNICALL Java_info_shibafu528_yukari_exvoice_ProcWrapper_execNa
     }
 
     // Call Proc#call
-    mrb_value rResult = mrb_funcall_argv(mrb, rProc, mrb_intern_cstr(mrb, "call"), argc, rArgs);
+    mrb_value rResult = mrb_funcall_argv(mrb, rProc, mrb_intern_lit(mrb, "call"), argc, rArgs);
     mrb_free(mrb, rArgs);
 
     // Rescue
