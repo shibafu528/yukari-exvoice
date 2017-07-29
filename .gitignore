@@ -4,3 +4,6 @@
 /local.properties
 /.externalNativeBuild
 /*.iml
+/.classpath
+/.project
+/.settings
