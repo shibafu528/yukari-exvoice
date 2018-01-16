@@ -14,6 +14,11 @@ allprojects {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'maven'
+
+group = 'info.shibafu528.yukari'
+archivesBaseName = 'yukari-exvoice'
+version = new Date().format("yyyyMMdd.HHmmss")
 
 android {
     compileSdkVersion 23
@@ -88,3 +93,13 @@ tasks.whenObjectAdded { task ->
 }
 
 clean.dependsOn mrubyClean
+
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: System.getenv("MVN_REPO_URL")) {
+                authentication(userName: System.getenv("MVN_REPO_USER_NAME"), password: System.getenv("MVN_REPO_PASSWORD"))
+            }
+        }
+    }
+}
