@@ -56,11 +56,6 @@ MRuby::Build.new do |conf|
   instance_exec conf, &configure
 end
 
-MRuby::CrossBuild.new('armv5-linux-androideabi') do |conf|
-  toolchain :android, arch: 'armeabi', platform: 'android-14', toolchain: :gcc
-  instance_exec conf, &configure
-end
-
 MRuby::CrossBuild.new('armv7-linux-androideabi') do |conf|
   toolchain :android, arch: 'armeabi-v7a', platform: 'android-14', toolchain: :gcc
   instance_exec conf, &configure
