@@ -1,7 +1,6 @@
 pipeline {
     agent { dockerfile true }
     environment {
-        PATH = '/usr/bin:/bin'
         BINTRAY_CRED = credentials('Bintray')
         BINTRAY_USER = "${env.BINTRAY_CRED_USR}"
         BINTRAY_API_KEY = "${env.BINTRAY_CRED_PSW}"
