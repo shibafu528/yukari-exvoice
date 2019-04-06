@@ -1,6 +1,7 @@
 pipeline {
     agent { dockerfile true }
     environment {
+        TZ = 'Asia/Tokyo'
         BINTRAY_CRED = credentials('Bintray')
         BINTRAY_USER = "${env.BINTRAY_CRED_USR}"
         BINTRAY_API_KEY = "${env.BINTRAY_CRED_PSW}"
