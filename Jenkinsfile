@@ -40,7 +40,7 @@ pipeline {
     }
     post {
         success {
-            archiveArtifacts '**/*.aar'
+            archiveArtifacts 'build/**/*.aar'
         }
     }
 }
