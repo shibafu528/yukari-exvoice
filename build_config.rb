@@ -1,6 +1,8 @@
 # disable pkg-config
 ENV['PKG_CONFIG_LIBDIR'] = ''
 
+MRuby::Lockfile.disable
+
 configure = -> (conf) {
   # default.gembox without commands
   conf.gem :core => 'mruby-sprintf'
@@ -28,7 +30,7 @@ configure = -> (conf) {
 
   # exvoice dependencies
   conf.gem :github => 'shibafu528/mruby-delayer-deferred', :branch => 'mruby'
-  conf.gem :github => 'shibafu528/mruby-pluggaloid-1-0', :branch => 'exvoice-maintain'
+  conf.gem :github => 'shibafu528/mruby-pluggaloid', :branch => 'mruby'
   conf.gem :github => 'shibafu528/mruby-diva', :branch => 'mruby'
   conf.gem :github => 'matsumoto-r/mruby-sleep'
   conf.gem :github => 'mattn/mruby-json'

@@ -1,7 +1,7 @@
 FROM openjdk:8-jdk
 
 RUN apt-get update \
-    && apt-get install -y build-essential ruby git libonig-dev libbison-dev
+    && apt-get install -y build-essential ruby git libonig-dev libbison-dev libncurses5
 
 ENV SDK_TOOL_VERSION=sdk-tools-linux-3859397
 ENV NDK_VERSION=android-ndk-r13b-linux-x86_64
@@ -27,6 +27,6 @@ RUN sdkmanager \
     "tools" \
     "platform-tools" \
     "extras;android;m2repository" \
-    "build-tools;27.0.3" \
-    "platforms;android-23" \
+    "build-tools;28.0.3" \
+    "platforms;android-28" \
     "cmake;3.6.4111459"
