@@ -27,6 +27,6 @@ RUN sdkmanager \
     "tools" \
     "platform-tools" \
     "extras;android;m2repository" \
-    "build-tools;27.0.3" \
-    "platforms;android-23" \
+    "build-tools;28.0.3" \
+    "platforms;android-28" \
     "cmake;3.6.4111459"
