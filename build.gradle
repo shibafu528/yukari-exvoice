@@ -72,7 +72,7 @@ android {
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'com.google.guava:guava:22.0-android'
-    api "org.twitter4j:twitter4j-core:4.0.6"
+    api "org.twitter4j:twitter4j-core:4.0.7"
 }
 
 ext {
