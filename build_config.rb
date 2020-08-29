@@ -1,6 +1,8 @@
 # disable pkg-config
 ENV['PKG_CONFIG_LIBDIR'] = ''
 
+MRuby::Lockfile.disable
+
 configure = -> (conf) {
   # default.gembox without commands
   conf.gem :core => 'mruby-sprintf'
