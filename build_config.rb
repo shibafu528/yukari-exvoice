@@ -29,9 +29,10 @@ configure = -> (conf) {
   conf.gem :core => 'mruby-kernel-ext'
 
   # exvoice dependencies
-  conf.gem :github => 'shibafu528/mruby-delayer-deferred', :branch => 'mruby'
-  conf.gem :github => 'shibafu528/mruby-pluggaloid', :branch => 'mruby'
-  conf.gem :github => 'shibafu528/mruby-diva', :branch => 'mruby'
+  conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix'
+  conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix-miquire-fs'
+  conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix-polyfill-gtk'
+  conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix-command-conditions'
   conf.gem :github => 'matsumoto-r/mruby-sleep'
   conf.gem :github => 'mattn/mruby-json'
   conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
@@ -41,6 +42,13 @@ configure = -> (conf) {
   conf.gem :github => 'ksss/mruby-singleton'
 
   conf.cc.defines << %w(MRB_INT64 MRB_UTF8_STRING)
+  conf.cc.flags << '-std=gnu99'
+
+  # expose libyaml.a (mruby-yaml)
+  file conf.libfile("#{conf.build_dir}/lib/libyaml") => conf.libfile("#{conf.build_dir}/lib/libmruby") do |t|
+    cp Dir.glob(File.join(conf.build_dir, '**/libyaml.a')).first, t.name
+  end
+  task :all => conf.libfile("#{conf.build_dir}/lib/libyaml")
 }
 
 MRuby::Build.new do |conf|
@@ -60,16 +68,22 @@ end
 
 MRuby::CrossBuild.new('armv7-linux-androideabi') do |conf|
   toolchain :android, arch: 'armeabi-v7a', platform: 'android-14', toolchain: :gcc
+  conf.host_target = 'armv7-linux-androideabi'
+  conf.build_target = 'x86_64-pc-linux-gnu'
   instance_exec conf, &configure
 end
 
 MRuby::CrossBuild.new('aarch64-linux-androideabi') do |conf|
   toolchain :android, arch: 'arm64-v8a', platform: 'android-21', toolchain: :gcc
+  conf.host_target = 'aarch64-linux-androideabi'
+  conf.build_target = 'x86_64-pc-linux-gnu'
   instance_exec conf, &configure
 end
 
 MRuby::CrossBuild.new('x86-linux-androideabi') do |conf|
   toolchain :android, arch: 'x86', platform: 'android-14', toolchain: :gcc
+  conf.host_target = 'x86-linux-androideabi'
+  conf.build_target = 'x86_64-pc-linux-gnu'
   instance_exec conf, &configure
 end
 

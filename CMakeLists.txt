@@ -19,11 +19,12 @@ elseif(ANDROID_ABI STREQUAL "x86_64")
 endif()
 
 link_directories(mruby/build/${MRUBY_ARCH}/lib)
+include_directories(mruby/build/repos/${MRUBY_ARCH}/mruby-mix/mruby-mix/include)
 
 file(GLOB jni_sources "src/main/jni/*.c")
 add_library(exvoice SHARED ${jni_sources})
 
-target_link_libraries(exvoice android log mruby)
+target_link_libraries(exvoice android log mruby yaml)
 
 
 

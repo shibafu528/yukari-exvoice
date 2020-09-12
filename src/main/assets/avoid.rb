@@ -3,15 +3,6 @@
 
 # ================
 
-# Stringクラスの不足埋め合わせ
-class String
-  def ascii_only?
-    !(self =~ /[^\x00-\x7f]/)
-  end unless method_defined? :ascii_only?
-end
-
-# ================
-
 # mruby-printのRubyコードを再定義
 # Kernel#putsが期待通りに動作してくれない版が存在するため、そのための処置
 module Kernel
@@ -62,21 +53,4 @@ module Kernel
       nil
     end
   end
-end
-
-# ================
-
-# freeze周りを定義
-# Kernel#freezeは存在しているのだけど、freezable?とfrozen?は存在してない。
-# 本来はちゃんとフラグをC関数で確認すべきだけど、今はとりあえず雑に処理する。
-module Kernel
-
-  def freezable?
-    false
-  end
-
-  def frozen?
-    false
-  end
-
 end

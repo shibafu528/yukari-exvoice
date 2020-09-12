@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <jni.h>
 #include <mruby.h>
+#include <mruby/mix.h>
 #include <mruby/compile.h>
 #include <mruby/string.h>
 #include <android/log.h>
@@ -91,6 +92,10 @@ JNIEXPORT jlong JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1open(JNIEnv
 
     // Override mruby-print Kernel.__printstr__
     mrb_define_module_function(mrb, mrb->kernel_module, "__printstr__", mrb_printstr, MRB_ARGS_REQ(1));
+
+    // Override Mix.log
+    struct RClass *mix = mrb_module_get(mrb, "Mix");
+    mrb_define_module_function(mrb, mix, "log", mrb_printstr, MRB_ARGS_REQ(1));
 
     // Initialize Objects
     int arenaIndex = mrb_gc_arena_save(mrb);
