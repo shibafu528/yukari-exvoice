@@ -98,6 +98,14 @@ public abstract class Plugin {
     }
 
     /**
+     * このプラグインを登録しているMRubyインスタンスを取得します。
+     * @return mruby
+     */
+    protected MRuby getMRuby() {
+        return mRuby;
+    }
+
+    /**
      * MRubyを所有しているContextを取得します。
      * @return Context
      */
