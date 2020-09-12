@@ -155,16 +155,13 @@ public abstract class Plugin {
                     eventName = annotation.value();
                 }
 
-                addEventListener(eventName, new PluggaloidEventListener() {
-                    @Override
-                    public void onEvent(Object... args) {
-                        try {
-                            method.invoke(Plugin.this, Arrays.copyOf(args, method.getParameterTypes().length));
-                        } catch (IllegalAccessException e) {
-                            e.printStackTrace();
-                        } catch (InvocationTargetException e) {
-                            e.printStackTrace();
-                        }
+                addEventListener(eventName, args -> {
+                    try {
+                        method.invoke(Plugin.this, Arrays.copyOf(args, method.getParameterTypes().length));
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
                     }
                 });
             } else if (method.isAnnotationPresent(Filter.class)) {
@@ -176,18 +173,15 @@ public abstract class Plugin {
                     eventName = annotation.value();
                 }
 
-                addEventFilter(eventName, new PluggaloidEventFilter() {
-                    @Override
-                    public Object[] filter(Object... args) {
-                        try {
-                            return (Object[]) method.invoke(Plugin.this, Arrays.copyOf(args, method.getParameterTypes().length));
-                        } catch (IllegalAccessException e) {
-                            e.printStackTrace();
-                        } catch (InvocationTargetException e) {
-                            e.printStackTrace();
-                        }
-                        return new Object[args.length];
+                addEventFilter(eventName, args -> {
+                    try {
+                        return (Object[]) method.invoke(Plugin.this, Arrays.copyOf(args, method.getParameterTypes().length));
+                    } catch (IllegalAccessException e) {
+                        e.printStackTrace();
+                    } catch (InvocationTargetException e) {
+                        e.printStackTrace();
                     }
+                    return new Object[args.length];
                 });
             }
         }

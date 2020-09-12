@@ -157,22 +157,16 @@ public class MRuby {
     }
 
     private void delayerRemainCallback() {
-        delayerHandler.post(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("exvoice(Java)", "delayerRemainCallback() -> n_runDelayer()");
-                n_runDelayer(mrubyInstancePointer);
-            }
+        delayerHandler.post(() -> {
+            Log.d("exvoice(Java)", "delayerRemainCallback() -> n_runDelayer()");
+            n_runDelayer(mrubyInstancePointer);
         });
     }
 
     private void delayerReserveCallback(final double delay) {
-        delayerHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                Log.d("exvoice(Java)", String.format(Locale.US, "delayerReserveCallback(%.3f) -> n_runDelayer()", delay));
-                n_runDelayer(mrubyInstancePointer);
-            }
+        delayerHandler.postDelayed(() -> {
+            Log.d("exvoice(Java)", String.format(Locale.US, "delayerReserveCallback(%.3f) -> n_runDelayer()", delay));
+            n_runDelayer(mrubyInstancePointer);
         }, (long) (delay * 1000) + 100); // TODO: なにやら誤差でうまく動かないこともある
     }
 
