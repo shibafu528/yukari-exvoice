@@ -1,6 +1,7 @@
 #include <stddef.h>
 #include <jni.h>
 #include <mruby.h>
+#include <mruby/error.h>
 #include <mruby/mix.h>
 #include <mruby/compile.h>
 #include <mruby/string.h>
@@ -86,6 +87,36 @@ static mrb_value mrb_printstr(mrb_state *mrb, mrb_value self) {
     return argv;
 }
 
+static void delayer_remain_handler(mrb_state *mrb) {
+    __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "delayer_remain_handler");
+    JNIEnv *env = getJNIEnv();
+    MRubyInstance *instance = findMRubyInstance(mrb);
+    if (instance != NULL) {
+        jclass jcls = (*env)->GetObjectClass(env, instance->javaInstance);
+        static jmethodID jm_delayerRemainCallback = NULL;
+        if (jm_delayerRemainCallback == NULL) {
+            jm_delayerRemainCallback = (*env)->GetMethodID(env, jcls, "delayerRemainCallback", "()V");
+        }
+        (*env)->CallVoidMethod(env, instance->javaInstance, jm_delayerRemainCallback);
+        (*env)->DeleteLocalRef(env, jcls);
+    }
+}
+
+static void delayer_reserve_handler(mrb_state *mrb, mrb_float delay) {
+    __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "delayer_reserve_handler");
+    JNIEnv *env = getJNIEnv();
+    MRubyInstance *instance = findMRubyInstance(mrb);
+    if (instance != NULL) {
+        jclass jcls = (*env)->GetObjectClass(env, instance->javaInstance);
+        static jmethodID jm_delayerReserveCallback = NULL;
+        if (jm_delayerReserveCallback == NULL) {
+            jm_delayerReserveCallback = (*env)->GetMethodID(env, jcls, "delayerReserveCallback", "(D)V");
+        }
+        (*env)->CallVoidMethod(env, instance->javaInstance, jm_delayerReserveCallback, (jdouble) delay);
+        (*env)->DeleteLocalRef(env, jcls);
+    }
+}
+
 JNIEXPORT jlong JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1open(JNIEnv *env, jobject self) {
     mrb_state *mrb = mrb_open();
     __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "open addr: %d", mrb);
@@ -112,6 +143,10 @@ JNIEXPORT jlong JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1open(JNIEnv
         field_MRuby_assetManager = (*env)->GetFieldID(env, selfClass, "assetManager", "Landroid/content/res/AssetManager;");
         (*env)->DeleteLocalRef(env, selfClass);
     }
+
+    // Register hooks
+    mix_register_remain_handler(mrb, delayer_remain_handler);
+    mix_register_reserve_handler(mrb, delayer_reserve_handler);
 
     return (jlong) mrb;
 }
@@ -158,4 +193,21 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1callTopLevel
     mrb_gc_arena_restore(mrb, arenaIndex);
 
     (*env)->ReleaseStringUTFChars(env, name, cName);
+}
+
+static mrb_value mix_run_m(mrb_state *mrb, mrb_value self) {
+    mix_run(mrb);
+    return mrb_nil_value();
+}
+
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1runDelayer(JNIEnv *env, jobject self, jlong pMrb) {
+    mrb_state *mrb = (mrb_state*) pMrb;
+    int arenaIndex = mrb_gc_arena_save(mrb);
+    mrb_bool state = 0;
+    mrb_value result = mrb_protect(mrb, mix_run_m, mrb_cptr_value(mrb, self), &state);
+    if (state) {
+        mrb_funcall_argv(mrb, mrb_obj_value(mrb->kernel_module), mrb_intern_lit(mrb, "error"), 1, &result);
+    }
+    mrb_gc_arena_restore(mrb, arenaIndex);
+    __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "Delayer.run done");
 }

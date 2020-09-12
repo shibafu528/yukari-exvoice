@@ -2,12 +2,15 @@ package info.shibafu528.yukari.exvoice;
 
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import info.shibafu528.yukari.exvoice.pluggaloid.Plugin;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -21,6 +24,7 @@ public class MRuby {
     private final Object mutex = new Object();
     private long mrubyInstancePointer;
     private Context context;
+    private Handler delayerHandler;
     private AssetManager assetManager;
     private PrintCallback printCallback;
     private Map<String, Plugin> plugins = new HashMap<>();
@@ -28,12 +32,22 @@ public class MRuby {
     private ConfigLoader configLoader;
 
     /**
-     * MRubyのVMを初期化し、使用可能な状態にします。
+     * MRubyのVMを初期化し、使用可能な状態にします。  
      * @param context
      */
     public MRuby(Context context) {
+        this(context, new Handler(Looper.getMainLooper()));
+    }
+
+    /**
+     * MRubyのVMを初期化し、使用可能な状態にします。
+     * @param context
+     * @param delayerHandler Delayerループを実行するHandler
+     */
+    public MRuby(Context context, Handler delayerHandler) {
         this.mrubyInstancePointer = n_open();
         this.context = context;
+        this.delayerHandler = delayerHandler;
         this.assetManager = context.getAssets();
 
         this.configLoader = new ConfigLoader(this);
@@ -130,6 +144,10 @@ public class MRuby {
         return context;
     }
 
+    public Handler getDelayerHandler() {
+        return delayerHandler;
+    }
+
     public Object getMutex() {
         return mutex;
     }
@@ -138,12 +156,33 @@ public class MRuby {
         return plugins.get(slug);
     }
 
+    private void delayerRemainCallback() {
+        delayerHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("exvoice(Java)", "delayerRemainCallback() -> n_runDelayer()");
+                n_runDelayer(mrubyInstancePointer);
+            }
+        });
+    }
+
+    private void delayerReserveCallback(final double delay) {
+        delayerHandler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Log.d("exvoice(Java)", String.format(Locale.US, "delayerReserveCallback(%.3f) -> n_runDelayer()", delay));
+                n_runDelayer(mrubyInstancePointer);
+            }
+        }, (long) (delay * 1000) + 100); // TODO: なにやら誤差でうまく動かないこともある
+    }
+
     private native long n_open();
     private native void n_close(long mrb);
 
     private native void n_loadString(long mrb, String code, boolean echo);
     private native Object n_callTopLevelFunc(long mrb, String name);
     private native void n_callTopLevelProc(long mrb, String name);
+    private native void n_runDelayer(long mrb);
 
     public interface PrintCallback {
         void print(String value);
