@@ -55,7 +55,7 @@ configure = -> (conf) {
 
   # expose libyaml.a (mruby-yaml)
   file conf.libfile("#{conf.build_dir}/lib/libyaml") => conf.libfile("#{conf.build_dir}/lib/libmruby") do |t|
-    cp Dir.glob(File.join(conf.build_dir, '**/libyaml.a')).first, t.name
+    cp Dir.glob(File.join(conf.build_dir, 'mrbgems/**/libyaml.a')).first, t.name
   end
   task :all => conf.libfile("#{conf.build_dir}/lib/libyaml")
 }
