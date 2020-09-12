@@ -131,7 +131,11 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1loadString(J
     }
 
     int arenaIndex = mrb_gc_arena_save(mrb);
-    mrb_load_string(mrb, codeBytes);
+
+    mrbc_context *mrbContext = mrbc_context_new(mrb);
+    mrbc_filename(mrb, mrbContext, "(eval)");
+    mrb_load_string_cxt(mrb, codeBytes, mrbContext);
+
     mrb_gc_arena_restore(mrb, arenaIndex);
 
     (*env)->ReleaseStringUTFChars(env, code, codeBytes);
