@@ -4,12 +4,18 @@ ENV['PKG_CONFIG_LIBDIR'] = ''
 MRuby::Lockfile.disable
 
 configure = -> (conf) {
+  enable_debug
+  
   # default.gembox without commands
+  conf.gem :core => 'mruby-metaprog'
+  conf.gem :core => 'mruby-io'
+  conf.gem :core => 'mruby-pack'
   conf.gem :core => 'mruby-sprintf'
   conf.gem :core => 'mruby-print'
   conf.gem :core => 'mruby-math'
   conf.gem :core => 'mruby-time'
   conf.gem :core => 'mruby-struct'
+  conf.gem :core => 'mruby-compar-ext'
   conf.gem :core => 'mruby-enum-ext'
   conf.gem :core => 'mruby-string-ext'
   conf.gem :core => 'mruby-numeric-ext'
@@ -25,8 +31,12 @@ configure = -> (conf) {
   conf.gem :core => 'mruby-enumerator'
   conf.gem :core => 'mruby-enum-lazy'
   conf.gem :core => 'mruby-toplevel-ext'
-  conf.gem :core => 'mruby-compiler'
   conf.gem :core => 'mruby-kernel-ext'
+  conf.gem :core => 'mruby-class-ext'
+  conf.gem :core => 'mruby-error'
+  conf.gem :core => 'mruby-rational'
+  conf.gem :core => 'mruby-complex'
+  conf.gem :core => 'mruby-compiler'
 
   # exvoice dependencies
   conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix'
@@ -36,7 +46,6 @@ configure = -> (conf) {
   conf.gem :github => 'matsumoto-r/mruby-sleep'
   conf.gem :github => 'mattn/mruby-json'
   conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
-  conf.gem :github => 'iij/mruby-io'
   conf.gem :github => 'iij/mruby-dir'
   conf.gem :github => 'iij/mruby-require'
   conf.gem :github => 'ksss/mruby-singleton'
