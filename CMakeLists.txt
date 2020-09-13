@@ -21,8 +21,32 @@ endif()
 link_directories(mruby/build/${MRUBY_ARCH}/lib)
 include_directories(mruby/build/repos/${MRUBY_ARCH}/mruby-mix/mruby-mix/include)
 
-file(GLOB jni_sources "src/main/jni/*.c")
-add_library(exvoice SHARED ${jni_sources})
+add_library(
+        exvoice
+        SHARED
+        src/main/jni/common.c
+        src/main/jni/common.h
+        src/main/jni/converter.c
+        src/main/jni/converter.h
+        src/main/jni/generator.h
+        src/main/jni/jni_BuildInfo.c
+        src/main/jni/jni_ConfigLoader.c
+        src/main/jni/jni_diva_ModelFactory.c
+        src/main/jni/jni_MRuby.c
+        src/main/jni/jni_MRuby.h
+        src/main/jni/jni_MRubyObjectHandler.c
+        src/main/jni/jni_pluggaloid_Plugin.c
+        src/main/jni/mrb_Android.c
+        src/main/jni/mrb_Android.h
+        src/main/jni/mrb_Android_AssetDir.c
+        src/main/jni/mrb_Android_AssetDir.h
+        src/main/jni/mrb_Android_Log.c
+        src/main/jni/mrb_Android_Log.h
+        src/main/jni/mrb_ConfigLoader.c
+        src/main/jni/mrb_ConfigLoader.h
+        src/main/jni/mrb_JavaThrowable.c
+        src/main/jni/mrb_JavaThrowable.h
+)
 
 target_link_libraries(exvoice android log mruby yaml)
 
