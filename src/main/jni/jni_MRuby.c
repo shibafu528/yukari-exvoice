@@ -11,10 +11,12 @@
 #include "converter.h"
 #include "mrb_Android.h"
 #include "mrb_ConfigLoader.h"
+#include "mrb_JavaThrowable.h"
 
 #define EXVOICE_INITIALIZERS(mrb) \
     exvoice_init_android(mrb); \
-    exvoice_init_configloader(mrb);
+    exvoice_init_configloader(mrb); \
+    exvoice_init_javathrowable(mrb);
 
 #define MRB_INSTANCE_STORE_SIZE 16
 static MRubyInstance instances[MRB_INSTANCE_STORE_SIZE] = {};

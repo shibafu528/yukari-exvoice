@@ -204,9 +204,16 @@ public abstract class Plugin {
                     try {
                         method.invoke(Plugin.this, Arrays.copyOf(args, method.getParameterTypes().length));
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     } catch (InvocationTargetException e) {
-                        e.printStackTrace();
+                        Throwable cause = e.getCause();
+                        if (cause instanceof Error) {
+                            throw (Error) cause;
+                        } else if (cause instanceof RuntimeException) {
+                            throw (RuntimeException) cause;
+                        } else {
+                            throw new RuntimeException(cause);
+                        }
                     }
                 });
             } else if (method.isAnnotationPresent(Filter.class)) {
@@ -222,11 +229,17 @@ public abstract class Plugin {
                     try {
                         return (Object[]) method.invoke(Plugin.this, Arrays.copyOf(args, method.getParameterTypes().length));
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     } catch (InvocationTargetException e) {
-                        e.printStackTrace();
+                        Throwable cause = e.getCause();
+                        if (cause instanceof Error) {
+                            throw (Error) cause;
+                        } else if (cause instanceof RuntimeException) {
+                            throw (RuntimeException) cause;
+                        } else {
+                            throw new RuntimeException(cause);
+                        }
                     }
-                    return new Object[args.length];
                 });
             } else if (method.isAnnotationPresent(Spell.class)) {
                 Spell annotation = method.getAnnotation(Spell.class);
@@ -296,9 +309,16 @@ public abstract class Plugin {
                     try {
                         method.invoke(Plugin.this, args);
                     } catch (IllegalAccessException e) {
-                        e.printStackTrace();
+                        throw new RuntimeException(e);
                     } catch (InvocationTargetException e) {
-                        e.printStackTrace();
+                        Throwable cause = e.getCause();
+                        if (cause instanceof Error) {
+                            throw (Error) cause;
+                        } else if (cause instanceof RuntimeException) {
+                            throw (RuntimeException) cause;
+                        } else {
+                            throw new RuntimeException(cause);
+                        }
                     }
                 });
             }

@@ -13,6 +13,7 @@
 #include "converter.h"
 #include "common.h"
 #include "generator.h"
+#include "mrb_JavaThrowable.h"
 
 OBJECT_FIELD_READER(getField_Plugin_mRuby, mRuby, JSIG_EXVOICE_MRUBY)
 OBJECT_FIELD_READER(getField_Plugin_slug, slug, JSIG_STRING)
@@ -242,6 +243,17 @@ static mrb_value defineSpell_callback(mrb_state *mrb, mrb_value self) {
     (*env)->DeleteLocalRef(env, jCallbackKey);
     (*env)->DeleteLocalRef(env, jSlug);
     (*env)->DeleteLocalRef(env, jPlugin);
+
+    if ((*env)->ExceptionCheck(env)) {
+        jthrowable throwable = (*env)->ExceptionOccurred(env);
+        (*env)->ExceptionClear(env);
+
+        mrb_value exc = exvoice_java_error_new(mrb, throwable);
+        (*env)->DeleteLocalRef(env, throwable);
+
+        mrb_exc_raise(mrb, exc);
+    }
+
     return mrb_nil_value();
 }
 

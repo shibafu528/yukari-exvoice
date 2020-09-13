@@ -3,6 +3,7 @@
 # mrubyとPluggaloidを使用したモバイル向けプラグインサブシステム
 
 Android.require_assets 'avoid.rb'
+Android.require_assets 'javaerror.rb'
 
 def tick
   begin
