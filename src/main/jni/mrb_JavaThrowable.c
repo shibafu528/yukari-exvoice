@@ -76,3 +76,8 @@ mrb_value exvoice_java_error_new(mrb_state *mrb, jthrowable exc) {
 
     return rError;
 }
+
+jthrowable exvoice_java_error_throwable(mrb_state *mrb, mrb_value err) {
+    mrb_value throwable = mrb_iv_get(mrb, err, mrb_intern_lit(mrb, "@throwable"));
+    return DATA_PTR(throwable);
+}

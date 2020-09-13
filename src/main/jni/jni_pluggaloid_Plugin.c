@@ -6,6 +6,7 @@
 #include <mruby/string.h>
 #include <mruby/proc.h>
 #include <mruby/error.h>
+#include <mruby/variable.h>
 #include <mruby/mix.h>
 #include <stddef.h>
 #include <android/log.h>
@@ -109,6 +110,17 @@ static mrb_value addEventListener_callback(mrb_state *mrb, mrb_value self) {
     (*env)->DeleteLocalRef(env, jPlugin);
     (*env)->DeleteLocalRef(env, jArgs);
     (*env)->DeleteLocalRef(env, jEventName);
+
+    if ((*env)->ExceptionCheck(env)) {
+        jthrowable throwable = (*env)->ExceptionOccurred(env);
+        (*env)->ExceptionClear(env);
+
+        mrb_value exc = exvoice_java_error_new(mrb, throwable);
+        (*env)->DeleteLocalRef(env, throwable);
+
+        mrb_exc_raise(mrb, exc);
+    }
+
     return mrb_nil_value();
 }
 
@@ -164,14 +176,26 @@ static mrb_value addEventFilter_callback(mrb_state *mrb, mrb_value self) {
 
     jstring jEventName = convertMrbValueToJava(env, mrb, rEventName);
     jobjectArray jResult = call_Plugin_filter(env, jPlugin, jEventName, jArgs);
-    mrb_value rResult = convertJavaToMrbValue(env, mrb, jResult);
 
     (*env)->DeleteLocalRef(env, objectClass);
     (*env)->DeleteLocalRef(env, jSlug);
     (*env)->DeleteLocalRef(env, jPlugin);
     (*env)->DeleteLocalRef(env, jArgs);
     (*env)->DeleteLocalRef(env, jEventName);
+
+    if ((*env)->ExceptionCheck(env)) {
+        jthrowable throwable = (*env)->ExceptionOccurred(env);
+        (*env)->ExceptionClear(env);
+
+        mrb_value exc = exvoice_java_error_new(mrb, throwable);
+        (*env)->DeleteLocalRef(env, throwable);
+
+        mrb_exc_raise(mrb, exc);
+    }
+
+    mrb_value rResult = convertJavaToMrbValue(env, mrb, jResult);
     (*env)->DeleteLocalRef(env, jResult);
+
     return rResult;
 }
 
@@ -325,13 +349,25 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_cal
     mrb_free(mrb, rArgs);
 
     if (mrb_exception_p(result)) {
-        jclass runtimeExceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
-        mrb_value ins = mrb_inspect(mrb, result);
-        (*env)->ThrowNew(env, runtimeExceptionClass, mrb_str_to_cstr(mrb, ins));
-
-        (*env)->DeleteLocalRef(env, runtimeExceptionClass);
-
         mrb->exc = 0;
+
+        struct RClass *javaError = mrb_class_get(mrb, "JavaError");
+        if (mrb_exc_ptr(result)->c == javaError) {
+            jclass runtimeExceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+            jmethodID initWithThrowable = (*env)->GetMethodID(env, runtimeExceptionClass, "<init>", "(Ljava/lang/Throwable;)V");
+            jthrowable cause = exvoice_java_error_throwable(mrb, result);
+            jthrowable exc = (*env)->NewObject(env, runtimeExceptionClass, initWithThrowable, cause);
+
+            (*env)->Throw(env, exc);
+
+            (*env)->DeleteLocalRef(env, runtimeExceptionClass);
+        } else {
+            jclass runtimeExceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+            mrb_value ins = mrb_inspect(mrb, result);
+            (*env)->ThrowNew(env, runtimeExceptionClass, mrb_str_to_cstr(mrb, ins));
+
+            (*env)->DeleteLocalRef(env, runtimeExceptionClass);
+        }
     }
 
     mrb_gc_arena_restore(mrb, arenaIndex);
@@ -365,13 +401,25 @@ JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Pl
     mrb_free(mrb, rArgs);
 
     if (mrb_exception_p(filteringResult)) {
+        mrb->exc = 0;
+
         struct RClass *filterError = mrb_class_get_under(mrb, mrb_module_get(mrb, "Pluggaloid"), "FilterError");
+        struct RClass *javaError = mrb_class_get(mrb, "JavaError");
         if (mrb_exc_ptr(filteringResult)->c == filterError) {
             jclass exceptionClass = (*env)->FindClass(env, NS_EXVOICE "pluggaloid/FilterException");
             mrb_value ins = mrb_inspect(mrb, filteringResult);
             (*env)->ThrowNew(env, exceptionClass, mrb_str_to_cstr(mrb, ins));
 
             (*env)->DeleteLocalRef(env, exceptionClass);
+        } else if (mrb_exc_ptr(filteringResult)->c == javaError) {
+            jclass runtimeExceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+            jmethodID initWithThrowable = (*env)->GetMethodID(env, runtimeExceptionClass, "<init>", "(Ljava/lang/Throwable;)V");
+            jthrowable cause = exvoice_java_error_throwable(mrb, filteringResult);
+            jthrowable exc = (*env)->NewObject(env, runtimeExceptionClass, initWithThrowable, cause);
+
+            (*env)->Throw(env, exc);
+
+            (*env)->DeleteLocalRef(env, runtimeExceptionClass);
         } else {
             jclass runtimeExceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
             mrb_value ins = mrb_inspect(mrb, filteringResult);
@@ -379,8 +427,6 @@ JNIEXPORT jobjectArray JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Pl
 
             (*env)->DeleteLocalRef(env, runtimeExceptionClass);
         }
-
-        mrb->exc = 0;
 
         (*env)->MonitorExit(env, mutex);
         (*env)->DeleteLocalRef(env, mutex);

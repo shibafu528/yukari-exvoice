@@ -9,4 +9,13 @@ class JavaError < StandardError
   def to_s
     @throwable.to_s
   end
+
+  def inspect
+    msg = @throwable.to_s
+    if msg && msg != ''
+      "#{msg} (#{self.class.name})"
+    else
+      self.class.name
+    end
+  end
 end
