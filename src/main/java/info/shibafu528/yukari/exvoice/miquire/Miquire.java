@@ -40,5 +40,5 @@ public class Miquire {
     }
 
     private static native String[][] n_loadAll(long mrb, boolean failfast);
-    public static native void n_appendLoadPath(long mrb, String path);
+    private static native void n_appendLoadPath(long mrb, String path);
 }
