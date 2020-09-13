@@ -234,12 +234,6 @@ public abstract class Plugin {
                     throw new IllegalArgumentException(String.format(Locale.US, "%s() のSpellアノテーションにSpell名が設定されていません。", method.getName()));
                 }
 
-                // 新しめのAndroidなら引数名が取れる
-                Object[] parameters = null;
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    parameters = method.getParameters();
-                }
-
                 // 引数のバインド位置を決める
                 // NOTE: キーワード引数は必ずモデル引数の後に置く必要がある。さもないと壊れる。
                 final Annotation[][] parameterAnnotations = method.getParameterAnnotations();
@@ -253,11 +247,7 @@ public abstract class Plugin {
                         if (a instanceof Keyword) {
                             String keyword = ((Keyword) a).value();
                             if (TextUtils.isEmpty(keyword)) {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                    keyword = ((Parameter) parameters[paramIndex]).getName();
-                                } else {
-                                    throw new IllegalArgumentException(String.format(Locale.US, "%s() のKeywordアノテーションにキーワード名が設定されていません。", method.getName()));
-                                }
+                                throw new IllegalArgumentException(String.format(Locale.US, "%s() のKeywordアノテーションにキーワード名が設定されていません。", method.getName()));
                             }
                             keywordMap.put(keyword, paramIndex);
                             isKeyword = true;

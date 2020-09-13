@@ -12,8 +12,8 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Keyword {
     /**
-     * キーワード引数名。省略した場合は修飾先の引数名をそのまま使用する。
+     * キーワード引数名。
      * @return
      */
-    String value() default "";
+    String value();
 }
