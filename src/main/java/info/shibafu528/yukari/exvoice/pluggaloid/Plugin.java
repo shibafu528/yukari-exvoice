@@ -165,7 +165,6 @@ public abstract class Plugin {
         }
 
         StringBuilder keyBuilder = new StringBuilder(spellName);
-        Arrays.sort(constraints);
         for (String constraint : constraints) {
             keyBuilder.append('$');
             keyBuilder.append(constraint);
