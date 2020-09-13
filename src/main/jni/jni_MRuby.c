@@ -209,7 +209,15 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1runDelayer(J
     mrb_value result = mrb_protect(mrb, mix_run_m, mrb_cptr_value(mrb, self), &state);
     if (state) {
         mrb_funcall_argv(mrb, mrb_obj_value(mrb->kernel_module), mrb_intern_lit(mrb, "error"), 1, &result);
+        struct RClass *javaError = mrb_class_get(mrb, "JavaError");
+        if (mrb_obj_is_instance_of(mrb, result, javaError)) {
+            jthrowable cause = exvoice_java_error_throwable(mrb, result);
+            (*env)->Throw(env, cause);
+            goto cleanup;
+        }
     }
-    mrb_gc_arena_restore(mrb, arenaIndex);
     __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "Delayer.run done");
+
+cleanup:
+    mrb_gc_arena_restore(mrb, arenaIndex);
 }
