@@ -90,12 +90,12 @@ MRuby::CrossBuild.new('aarch64-linux-androideabi') do |conf|
   instance_exec conf, &configure
 end
 
-MRuby::CrossBuild.new('x86-linux-androideabi') do |conf|
-  toolchain :android, arch: 'x86', platform: 'android-14', toolchain: :gcc
-  conf.host_target = 'x86-linux-androideabi'
-  conf.build_target = 'x86_64-pc-linux-gnu'
-  instance_exec conf, &configure
-end
+# MRuby::CrossBuild.new('x86-linux-androideabi') do |conf|
+#   toolchain :android, arch: 'x86', platform: 'android-14', toolchain: :gcc
+#   conf.host_target = 'x86-linux-androideabi'
+#   conf.build_target = 'x86_64-pc-linux-gnu'
+#   instance_exec conf, &configure
+# end
 
 # MRuby::CrossBuild.new('x86_64-linux-androideabi') do |conf|
 #   toolchain :android, arch: 'x86_64', platform: 'android-21', toolchain: :gcc
