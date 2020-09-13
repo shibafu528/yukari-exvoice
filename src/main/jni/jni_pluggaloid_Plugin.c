@@ -6,6 +6,7 @@
 #include <mruby/string.h>
 #include <mruby/proc.h>
 #include <mruby/error.h>
+#include <mruby/mix.h>
 #include <stddef.h>
 #include <android/log.h>
 #include "jni_MRuby.h"
@@ -37,6 +38,18 @@ static inline jobjectArray call_Plugin_filter(JNIEnv *env, jobject self, jstring
     }
     return (jobjectArray) (*env)->CallObjectMethod(env, self, method_Plugin_filter, eventName, args);
 }
+
+static inline void call_Plugin_onSpell(JNIEnv *env, jobject self, jstring callbackKey, jobjectArray models, jobject options) {
+    static jmethodID method_Plugin_onSpell = NULL;
+    if (method_Plugin_onSpell == NULL) {
+        jclass selfClass = (*env)->GetObjectClass(env, self);
+        method_Plugin_onSpell = (*env)->GetMethodID(env, selfClass, "onSpell", "(Ljava/lang/String;[Ljava/lang/Object;Ljava/util/Map;)V");
+
+        (*env)->DeleteLocalRef(env, selfClass);
+    }
+    (*env)->CallVoidMethod(env, self, method_Plugin_onSpell, callbackKey, models, options);
+}
+
 
 static inline mrb_sym convertJstringToSymbol(JNIEnv *env, mrb_state *mrb, jstring str) {
     const char *cstr = (*env)->GetStringUTFChars(env, str, NULL);
@@ -190,6 +203,88 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_add
     __android_log_print(ANDROID_LOG_DEBUG, "exvoice-Plugin", "register native filter %s%s", mrb_str_to_cstr(mrb, mrb_inspect(mrb, rSlug)), mrb_str_to_cstr(mrb, mrb_inspect(mrb, rEventName)));
 
     // Release references
+    (*env)->DeleteLocalRef(env, mRubyObject);
+}
+
+static mrb_value defineSpell_callback(mrb_state *mrb, mrb_value self) {
+    JNIEnv *env = getJNIEnv();
+    mrb_value rSlug = mrb_proc_cfunc_env_get(mrb, 0);
+    mrb_value rCallbackKey = mrb_proc_cfunc_env_get(mrb, 1);
+    MRubyInstance *instance = findMRubyInstance(mrb);
+    jstring jSlug = convertMrbValueToJava(env, mrb, rSlug);
+    jobject jPlugin = call_MRuby_getPlugin(env, instance->javaInstance, jSlug);
+
+    // take arguments
+    mrb_value *models;
+    mrb_int modelLength;
+    mrb_value kwrest;
+    mrb_kwargs kwargs = { 0, NULL, NULL, 0, &kwrest };
+    mrb_get_args(mrb, "*:", &models, &modelLength, &kwargs);
+
+    // Convert models
+    jclass objectClass = (*env)->FindClass(env, JCLASS_OBJECT);
+    jobjectArray jModels = (*env)->NewObjectArray(env, modelLength, objectClass, NULL);
+    mrb_sym toHash = mrb_intern_lit(mrb, "to_hash");
+    for (int i = 0; i < modelLength; i++) {
+        mrb_value h = mrb_funcall_argv(mrb, models[i], toHash, 0, NULL);
+        (*env)->SetObjectArrayElement(env, jModels, i, convertMrbValueToJava(env, mrb, h));
+    }
+
+    // Convert kwrest
+    jobject jOptions = convertMrbValueToJava(env, mrb, kwrest);
+
+    jstring jCallbackKey = convertMrbValueToJava(env, mrb, rCallbackKey);
+    call_Plugin_onSpell(env, jPlugin, jCallbackKey, jModels, jOptions);
+
+    (*env)->DeleteLocalRef(env, objectClass);
+    (*env)->DeleteLocalRef(env, jModels);
+    (*env)->DeleteLocalRef(env, jOptions);
+    (*env)->DeleteLocalRef(env, jCallbackKey);
+    (*env)->DeleteLocalRef(env, jSlug);
+    (*env)->DeleteLocalRef(env, jPlugin);
+    return mrb_nil_value();
+}
+
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_pluggaloid_Plugin_defineSpellNative(JNIEnv *env, jobject self, jstring spellName, jobjectArray constraints, jstring callbackKey) {
+    // Get mrb_state
+    jobject mRubyObject = getField_Plugin_mRuby(env, self);
+    mrb_state *mrb = getField_MRuby_mrubyInstancePointer(env, mRubyObject);
+
+    // Get this.slug
+    mrb_value rSlug;
+    {
+        jstring slug = getField_Plugin_slug(env, self);
+        rSlug = mrb_symbol_value(convertJstringToSymbol(env, mrb, slug));
+        (*env)->DeleteLocalRef(env, slug);
+    }
+
+    // Convert constraints
+    jsize constraintsLength = (*env)->GetArrayLength(env, constraints);
+    mrb_sym *rConstraints = mrb_calloc(mrb, constraintsLength, sizeof(mrb_sym));
+    for (int i = 0; i < constraintsLength; i++) {
+        jobject obj = (*env)->GetObjectArrayElement(env, constraints, i);
+        rConstraints[i] = convertJstringToSymbol(env, mrb, obj);
+        (*env)->DeleteLocalRef(env, obj);
+    }
+
+    // Make callback
+    mrb_value rCallbackKey;
+    {
+        const char *cCallbackKey = (*env)->GetStringUTFChars(env, callbackKey, NULL);
+        rCallbackKey = mrb_str_new_cstr(mrb, cCallbackKey);
+        (*env)->ReleaseStringUTFChars(env, callbackKey, cCallbackKey);
+    }
+    mrb_value procEnv[] = { rSlug, rCallbackKey };
+    struct RProc *proc = mrb_proc_new_cfunc_with_env(mrb, defineSpell_callback, 2, procEnv);
+
+    // Register spell
+    const char *cSpellName = (*env)->GetStringUTFChars(env, spellName, NULL);
+    mix_define_spell(mrb, cSpellName, constraintsLength, rConstraints, mrb_nil_value(), mrb_obj_value(proc));
+
+    __android_log_print(ANDROID_LOG_DEBUG, "exvoice-Plugin", "register native spell %s@%d", cSpellName, constraintsLength);
+
+    // Release references
+    (*env)->ReleaseStringUTFChars(env, spellName, cSpellName);
     (*env)->DeleteLocalRef(env, mRubyObject);
 }
 

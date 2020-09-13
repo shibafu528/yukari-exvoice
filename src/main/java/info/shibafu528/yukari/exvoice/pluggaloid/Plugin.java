@@ -26,6 +26,7 @@ public abstract class Plugin {
     private MRuby mRuby;
     private Map<String, PluggaloidEventListener> listeners = new HashMap<>();
     private Map<String, PluggaloidEventFilter> filters = new HashMap<>();
+    private Map<String, PluggaloidSpellListener> spells = new HashMap<>();
 
     /**
      * プラグインの初期化を行います。サブクラスではここでslugを決定し、{@link MRuby} のみを引数にとる必要があります。
@@ -98,6 +99,21 @@ public abstract class Plugin {
     }
 
     /**
+     * Spellが呼び出された際、ネイティブのコールバック関数から呼び出されます。
+     * @param callbackKey コールバックリスナーのキー
+     * @param models Model引数
+     * @param options キーワード引数
+     */
+    /*package*/ void onSpell(String callbackKey, Object[] models, Map<String, ?> options) {
+        Log.d("Plugin", String.format("%s : spell %s", slug, callbackKey));
+
+        PluggaloidSpellListener l = spells.get(callbackKey);
+        if (l != null) {
+            l.onSpell(models, options);
+        }
+    }
+
+    /**
      * このプラグインを登録しているMRubyインスタンスを取得します。
      * @return mruby
      */
@@ -134,6 +150,31 @@ public abstract class Plugin {
         if (filters.get(eventName) == null) {
             filters.put(eventName, filter);
             addEventFilterNative(eventName);
+        }
+    }
+
+    /**
+     * Spellを定義し、リスナを紐付けます。同じ名前、同じ制約のSpellに対して複数のリスナを登録することはできません。
+     * @param spellName Spell名
+     * @param constraints 引数となるModelのslugの配列
+     * @param listener リスナ
+     */
+    protected void defineSpell(String spellName, String[] constraints, PluggaloidSpellListener listener) {
+        if (constraints == null || constraints.length == 0) {
+            throw new IllegalArgumentException("constraints must have one or more values");
+        }
+
+        StringBuilder keyBuilder = new StringBuilder(spellName);
+        Arrays.sort(constraints);
+        for (String constraint : constraints) {
+            keyBuilder.append('$');
+            keyBuilder.append(constraint);
+        }
+
+        String key = keyBuilder.toString();
+        if (spells.get(key) == null) {
+            spells.put(key, listener);
+            defineSpellNative(spellName, constraints, key);
         }
     }
 
@@ -204,11 +245,17 @@ public abstract class Plugin {
      */
     private native void addEventFilterNative(String eventName);
 
+    private native void defineSpellNative(String spellName, String[] constraints, String callbackKey);
+
     public interface PluggaloidEventListener {
         void onEvent(Object... args);
     }
 
     public interface PluggaloidEventFilter {
         Object[] filter(Object... args);
+    }
+
+    public interface PluggaloidSpellListener {
+        void onSpell(Object[] models, Map<String, ?> options);
     }
 }

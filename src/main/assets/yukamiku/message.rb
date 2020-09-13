@@ -3,6 +3,8 @@
 # Message互換クラス
 class Message < Diva::Model
 
+  register :twitter_tweet
+
   # args format
   # key     | value(class)
   #---------+--------------
