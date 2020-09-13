@@ -43,6 +43,7 @@ configure = -> (conf) {
   conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix-miquire-fs'
   conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix-polyfill-gtk'
   conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix-command-conditions'
+  conf.gem :github => 'shibafu528/mruby-mix', :path => 'mruby-mix-twitter-models'
   conf.gem :github => 'matsumoto-r/mruby-sleep'
   conf.gem :github => 'mattn/mruby-json'
   conf.gem :github => 'shibafu528/mruby-thread', :branch => 'patch-android'
