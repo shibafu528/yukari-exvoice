@@ -9,6 +9,7 @@
 #include "jni_MRuby.h"
 #include "common.h"
 #include "converter.h"
+#include "generator.h"
 #include "mrb_Android.h"
 #include "mrb_ConfigLoader.h"
 #include "mrb_JavaThrowable.h"
@@ -220,4 +221,23 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1runDelayer(J
 
 cleanup:
     mrb_gc_arena_restore(mrb, arenaIndex);
+}
+
+JNIEXPORT jboolean JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1require(JNIEnv *env, jobject thiz, jlong pMrb, jstring path) {
+    mrb_state *mrb = (mrb_state*) pMrb;
+    const char *cPath = (*env)->GetStringUTFChars(env, path, NULL);
+    int res = mix_require(mrb, cPath);
+    (*env)->ReleaseStringUTFChars(env, path, cPath);
+
+    if (mrb->exc) {
+        jclass exceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+        mrb_value ins = mrb_inspect(mrb, mrb_obj_value(mrb->exc));
+        (*env)->ThrowNew(env, exceptionClass, mrb_str_to_cstr(mrb, ins));
+
+        (*env)->DeleteLocalRef(env, exceptionClass);
+
+        mrb->exc = 0;
+    }
+
+    return res;
 }

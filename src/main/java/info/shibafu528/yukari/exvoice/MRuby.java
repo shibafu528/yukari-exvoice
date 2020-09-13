@@ -7,6 +7,8 @@ import android.os.Looper;
 import android.util.Log;
 import info.shibafu528.yukari.exvoice.pluggaloid.Plugin;
 
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
@@ -105,6 +107,22 @@ public class MRuby {
     }
 
     /**
+     * Rubyスクリプトを読み込みます。
+     * @param file Rubyスクリプトファイル
+     * @throws FileNotFoundException ファイルが存在しない場合にスロー
+     * @return 読み込みに成功すればtrue, 何らかの理由で失敗した場合はfalse
+     */
+    public boolean require(File file) throws FileNotFoundException {
+        synchronized (mutex) {
+            if (!file.exists()) {
+                throw new FileNotFoundException("File not found: " + file.getAbsolutePath());
+            }
+
+            return n_require(mrubyInstancePointer, file.getAbsolutePath());
+        }
+    }
+
+    /**
      * プラグインを登録し、使用可能な状態にします。
      * @param clazz プラグインクラス
      */
@@ -184,6 +202,7 @@ public class MRuby {
     private native Object n_callTopLevelFunc(long mrb, String name);
     private native void n_callTopLevelProc(long mrb, String name);
     private native void n_runDelayer(long mrb);
+    private native boolean n_require(long mrb, String path);
 
     public interface PrintCallback {
         void print(String value);
