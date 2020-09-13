@@ -241,3 +241,26 @@ JNIEXPORT jboolean JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1require(
 
     return res;
 }
+
+JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1requireAssets(JNIEnv *env, jobject thiz, jlong pMrb, jstring path) {
+    mrb_state *mrb = (mrb_state*) pMrb;
+    const char *cPath = (*env)->GetStringUTFChars(env, path, NULL);
+
+    int arenaIndex = mrb_gc_arena_save(mrb);
+    struct RClass *android = mrb_module_get(mrb, "Android");
+    mrb_value rPath = mrb_str_new_cstr(mrb, cPath);
+    mrb_funcall_argv(mrb, mrb_obj_value(android), mrb_intern_lit(mrb, "require_assets"), 1, &rPath);
+
+    if (mrb->exc) {
+        jclass exceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+        mrb_value ins = mrb_inspect(mrb, mrb_obj_value(mrb->exc));
+        (*env)->ThrowNew(env, exceptionClass, mrb_str_to_cstr(mrb, ins));
+
+        (*env)->DeleteLocalRef(env, exceptionClass);
+
+        mrb->exc = 0;
+    }
+
+    (*env)->ReleaseStringUTFChars(env, path, cPath);
+    mrb_gc_arena_restore(mrb, arenaIndex);
+}

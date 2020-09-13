@@ -123,6 +123,16 @@ public class MRuby {
     }
 
     /**
+     * AssetsからRubyスクリプトを読み込みます。
+     * @param path Assets内のファイル名
+     */
+    public void requireAssets(String path) {
+        synchronized (mutex) {
+            n_requireAssets(mrubyInstancePointer, path);
+        }
+    }
+
+    /**
      * プラグインを登録し、使用可能な状態にします。
      * @param clazz プラグインクラス
      */
@@ -203,6 +213,7 @@ public class MRuby {
     private native void n_callTopLevelProc(long mrb, String name);
     private native void n_runDelayer(long mrb);
     private native boolean n_require(long mrb, String path);
+    private native void n_requireAssets(long mrb, String path);
 
     public interface PrintCallback {
         void print(String value);
