@@ -37,6 +37,7 @@ add_library(
         src/main/jni/jni_MRubyObjectHandler.c
         src/main/jni/jni_miquire_Miquire.c
         src/main/jni/jni_pluggaloid_Plugin.c
+        src/main/jni/jni_ProcWrapper.c
         src/main/jni/mrb_Android.c
         src/main/jni/mrb_Android.h
         src/main/jni/mrb_Android_AssetDir.c
