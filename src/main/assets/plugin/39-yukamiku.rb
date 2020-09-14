@@ -1,7 +1,5 @@
 # encoding: utf-8
 Android.require_assets 'yukamiku/mikuenv.rb'
-Android.require_assets 'yukamiku/user.rb'
-Android.require_assets 'yukamiku/message.rb'
 Android.require_assets 'yukamiku/gui.rb'
 Android.require_assets 'yukamiku/gtk.rb'
 Android.require_assets 'yukamiku/configloader.rb'
@@ -48,71 +46,77 @@ module Plugin::YukaMiku
 end
 
 #
-# ゆかミクは尊い (mikutter互換のDSLを提供するプラグインです)
+# ゆかミクは尊い (command DSLをtwicca DSLに変換します)
 #
 Plugin.create :yukamiku do
 
-  # mikutterコマンドを定義
-  # ==== Args
-  # [slug] コマンドスラッグ
-  # [options] コマンドオプション
-  # [&exec] コマンドの実行内容
-  defdsl :command do |slug, options, &exec|
-    miku_command = options.merge(slug: slug, exec: exec)
+  filter_twicca_action_show_tweet do |actions|
+    commands, = Plugin.filtering(:command, Hash.new)
+    commands.each do |slug, command|
+      next if command[:role] != :timeline
+      puts "mikutter_command #{slug}(role: :timeline) => twicca_action :show_tweet"
+      
+      # パラメータの互換性対応
+      command[:label] = command[:name]
 
-    # パラメータの互換性対応
-    miku_command[:label] = miku_command[:name]
+      orig_exec = command[:exec]
+      command[:exec] = Proc.new do |extra|
+        opt = Plugin::GUI::Event.new(:contextmenu, Plugin[:gtk].widgetof(:timeline), [Plugin::YukaMiku.to_message(extra)])
 
-    # 近い機能を持つDSLに振り分ける
-    case miku_command[:role]
-      when :timeline
-        puts "mikutter_command #{slug}(role: :timeline) => twicca_action :show_tweet"
+        # Postboxの変化を監視するために現在値を保持
+        postbox = Plugin[:gtk].widgetof(:postbox)
+        postbox_before_text = postbox.widget_post.buffer.text
+        postbox_before_options = postbox.options
 
-        twicca_action(:show_tweet, slug, miku_command) do |extra|
-          opt = Plugin::GUI::Event.new(:contextmenu, Plugin[:gtk].widgetof(:timeline), [Plugin::YukaMiku.to_message(extra)])
+        orig_exec.call(opt)
 
-          # Postboxの変化を監視するために現在値を保持
-          postbox = Plugin[:gtk].widgetof(:postbox)
-          postbox_before_text = postbox.widget_post.buffer.text
-          postbox_before_options = postbox.options
+        # Postboxの内容が変化していたらツイート画面を出す
+        if postbox.widget_post.buffer.text != postbox_before_text
+          Plugin.call(:intent, activity: :TweetActivity, mode: :tweet, text: postbox.widget_post.buffer.text)
+        elsif postbox.options != postbox_before_options
+          call_opt = {activity: :TweetActivity, text: [postbox.options[:header], postbox.options[:footer]].join(' ').strip}
 
-          exec.call(opt)
-
-          # Postboxの内容が変化していたらツイート画面を出す
-          if postbox.widget_post.buffer.text != postbox_before_text
-            Plugin.call(:intent, activity: :TweetActivity, mode: :tweet, text: postbox.widget_post.buffer.text)
-          elsif postbox.options != postbox_before_options
-            call_opt = {activity: :TweetActivity, text: [postbox.options[:header], postbox.options[:footer]].join(' ').strip}
-
-            if postbox.options.has_key? :to
-              call_opt[:mode] = :reply
-              call_opt[:in_reply_to] = postbox.options[:to][:id]
-            else
-              call_opt[:mode] = :tweet
-            end
-
-            Plugin.call(:intent, call_opt)
+          if postbox.options.has_key? :to
+            call_opt[:mode] = :reply
+            call_opt[:in_reply_to] = postbox.options[:to][:id]
+          else
+            call_opt[:mode] = :tweet
           end
+
+          Plugin.call(:intent, call_opt)
         end
+      end
 
-      when :postbox
-        puts "mikutter_command #{slug}(role: :postbox) => twicca_action :edit_tweet"
-
-        twicca_action(:edit_tweet, slug, miku_command) do |extra|
-          opt = Plugin::GUI::Event.new(:contextmenu, Plugin[:gtk].widgetof(:postbox), [])
-
-          # Postboxに現在の入力内容を投入する
-          postbox = Plugin[:gtk].widgetof(:postbox)
-          postbox.widget_post.buffer.text = extra['text']
-
-          exec.call(opt)
-
-          # Postboxの内容を結果として返却する
-          {result_code: :ok, intent: {text: postbox.widget_post.buffer.text}}
-        end
-
-      else
-        puts "mikutter_command #{slug}(role: #{miku_command[:role]}) is not compatible."
+      actions[slug] = command
     end
+    [actions]
+  end
+
+  filter_twicca_action_edit_tweet do |actions|
+    commands, = Plugin.filtering(:command, Hash.new)
+    commands.each do |slug, command|
+      next if command[:role] != :postbox
+      puts "mikutter_command #{slug}(role: :postbox) => twicca_action :edit_tweet"
+      
+      # パラメータの互換性対応
+      command[:label] = command[:name]
+
+      orig_exec = command[:exec]
+      command[:exec] = Proc.new do |extra|
+        opt = Plugin::GUI::Event.new(:contextmenu, Plugin[:gtk].widgetof(:postbox), [])
+
+        # Postboxに現在の入力内容を投入する
+        postbox = Plugin[:gtk].widgetof(:postbox)
+        postbox.widget_post.buffer.text = extra['text']
+
+        orig_exec.call(opt)
+
+        # Postboxの内容を結果として返却する
+        {result_code: :ok, intent: {text: postbox.widget_post.buffer.text}}
+      end
+
+      actions[slug] = command
+    end
+    [actions]
   end
 end
