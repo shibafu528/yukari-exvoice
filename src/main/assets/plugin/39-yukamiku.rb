@@ -57,6 +57,7 @@ Plugin.create :yukamiku do
       puts "mikutter_command #{slug}(role: :timeline) => twicca_action :show_tweet"
       
       # パラメータの互換性対応
+      command = command.melt
       command[:label] = command[:name]
 
       orig_exec = command[:exec]
@@ -99,6 +100,7 @@ Plugin.create :yukamiku do
       puts "mikutter_command #{slug}(role: :postbox) => twicca_action :edit_tweet"
       
       # パラメータの互換性対応
+      command = command.melt
       command[:label] = command[:name]
 
       orig_exec = command[:exec]
