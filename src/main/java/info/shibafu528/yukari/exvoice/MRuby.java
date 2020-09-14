@@ -193,6 +193,9 @@ public class MRuby {
 
     private void delayerRemainCallback() {
         delayerHandler.post(() -> {
+            if (mrubyInstancePointer == 0) {
+                return;
+            }
             Log.d("exvoice(Java)", "delayerRemainCallback() -> n_runDelayer()");
             n_runDelayer(mrubyInstancePointer);
         });
@@ -200,6 +203,9 @@ public class MRuby {
 
     private void delayerReserveCallback(final double delay) {
         delayerHandler.postDelayed(() -> {
+            if (mrubyInstancePointer == 0) {
+                return;
+            }
             Log.d("exvoice(Java)", String.format(Locale.US, "delayerReserveCallback(%.3f) -> n_runDelayer()", delay));
             n_runDelayer(mrubyInstancePointer);
         }, (long) (delay * 1000) + 100); // TODO: なにやら誤差でうまく動かないこともある
