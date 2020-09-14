@@ -3,7 +3,6 @@
 # periodイベントの供給
 Plugin.create(:chronus) do
   def emit_period
-    notice 'chronus: emit_period'
     Delayer.new(delay: 1) do
       Plugin.call(:period)
     end
