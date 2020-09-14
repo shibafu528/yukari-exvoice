@@ -151,6 +151,16 @@ JNIEXPORT jlong JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1open(JNIEnv
     mix_register_remain_handler(mrb, delayer_remain_handler);
     mix_register_reserve_handler(mrb, delayer_reserve_handler);
 
+    if (mrb->exc) {
+        jclass exceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+        mrb_value ins = mrb_inspect(mrb, mrb_obj_value(mrb->exc));
+        (*env)->ThrowNew(env, exceptionClass, mrb_str_to_cstr(mrb, ins));
+
+        (*env)->DeleteLocalRef(env, exceptionClass);
+
+        mrb->exc = 0;
+    }
+
     return (jlong) mrb;
 }
 
@@ -176,6 +186,16 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1loadString(J
 
     mrb_gc_arena_restore(mrb, arenaIndex);
 
+    if (mrb->exc) {
+        jclass exceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+        mrb_value ins = mrb_inspect(mrb, mrb_obj_value(mrb->exc));
+        (*env)->ThrowNew(env, exceptionClass, mrb_str_to_cstr(mrb, ins));
+
+        (*env)->DeleteLocalRef(env, exceptionClass);
+
+        mrb->exc = 0;
+    }
+
     (*env)->ReleaseStringUTFChars(env, code, codeBytes);
 }
 
@@ -194,6 +214,16 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1callTopLevel
     int arenaIndex = mrb_gc_arena_save(mrb);
     mrb_funcall(mrb, mrb_obj_value(mrb->top_self), cName, 0, NULL);
     mrb_gc_arena_restore(mrb, arenaIndex);
+
+    if (mrb->exc) {
+        jclass exceptionClass = (*env)->FindClass(env, JCLASS_EXVOICE_MRUBY_EXCEPTION);
+        mrb_value ins = mrb_inspect(mrb, mrb_obj_value(mrb->exc));
+        (*env)->ThrowNew(env, exceptionClass, mrb_str_to_cstr(mrb, ins));
+
+        (*env)->DeleteLocalRef(env, exceptionClass);
+
+        mrb->exc = 0;
+    }
 
     (*env)->ReleaseStringUTFChars(env, name, cName);
 }
