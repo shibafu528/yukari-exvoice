@@ -4,6 +4,10 @@ Android.require_assets 'yukamiku/gui.rb'
 Android.require_assets 'yukamiku/gtk.rb'
 Android.require_assets 'yukamiku/configloader.rb'
 
+class Message
+  field.uri :perma_link
+end
+
 module Plugin::YukaMiku
   class << self
 
@@ -12,6 +16,7 @@ module Plugin::YukaMiku
     # @return [Message] mikutter message
     def to_message(extra)
       value = {
+          perma_link: extra['url'],
           id: extra['id'].to_i,
           message: extra['text'],
           user: to_user(extra),
