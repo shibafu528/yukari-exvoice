@@ -2,9 +2,10 @@ pipeline {
     agent { dockerfile true }
     environment {
         TZ = 'Asia/Tokyo'
-        BINTRAY_CRED = credentials('Bintray')
-        BINTRAY_USER = "${env.BINTRAY_CRED_USR}"
-        BINTRAY_API_KEY = "${env.BINTRAY_CRED_PSW}"
+        NEXUS_CRED = credentials('Nexus')
+        MVN_REPO_URL = "${env.MVN_REPO_URL}"
+        MVN_REPO_USER_NAME = "${env.NEXUS_CRED_USR}"
+        MVN_REPO_PASSWORD = "${env.NEXUS_CRED_PSW}"
     }
     
     stages {
@@ -34,7 +35,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                sh './gradlew bintrayUpload'
+                sh './gradlew uploadArchives'
             }
         }
     }
