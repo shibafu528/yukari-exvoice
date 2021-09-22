@@ -27,7 +27,7 @@ pipeline {
         }
         stage('Lint') {
             steps {
-                androidLint canComputeNew: false, canRunOnFailed: true, defaultEncoding: '', healthy: '', pattern: '', unHealthy: ''
+                recordIssues(tools: [androidLintParser(pattern: '**/lint-results*.xml')])
             }
         }
         stage('Deploy') {
