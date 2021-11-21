@@ -1,0 +1,67 @@
+name: build
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Cache Docker layers
+        uses: actions/cache@v2
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+
+      - name: Build docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: ./Dockerfile
+          builder: ${{ steps.buildx.outputs.name }}
+          load: true
+          tags: shibafu528/yukari-exvoice:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+      - name: Build yukari-exvoice
+        run: docker run --rm -v "${{ github.workspace }}:/project" -w /project shibafu528/yukari-exvoice ./gradlew build
+
+      - name: Upload AAR
+        uses: actions/upload-artifact@v2
+        with:
+          name: AAR
+          path: build/outputs/aar/*.aar
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v2
+        with:
+          name: Reports
+          path: build/reports
+
+      - name: Publish
+        if: github.ref == 'refs/heads/master'
+        run: |
+          docker run --rm \
+            -v "${{ github.workspace }}:/project" \
+            -w /project \
+            -e MVN_REPO_URL \
+            -e MVN_REPO_USER_NAME \
+            -e MVN_REPO_PASSWORD \
+            shibafu528/yukari-exvoice \
+            ./gradlew publish
+        env:
+          MVN_REPO_URL: https://maven.pkg.github.com/shibafu528/yukari-exvoice
+          MVN_REPO_USER_NAME: ${{ github.actor }}
+          MVN_REPO_PASSWORD: ${{ secrets.GITHUB_TOKEN }}
