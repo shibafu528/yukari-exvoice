@@ -35,7 +35,7 @@ pipeline {
                 branch 'master'
             }
             steps {
-                sh './gradlew uploadArchives'
+                sh './gradlew publish'
             }
         }
     }
