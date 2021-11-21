@@ -100,6 +100,28 @@ tasks.whenObjectAdded { task ->
 clean.dependsOn mrubyClean
 
 publishing {
+    publications {
+        Production(MavenPublication) {
+            artifact("$buildDir/outputs/aar/yukari-exvoice-release.aar")
+            groupId group
+            artifactId archivesBaseName
+            version version
+
+            pom.withXml {
+                def dependenciesNode = asNode().appendNode('dependencies')
+
+                configurations.implementation.allDependencies.each {
+                    if (it.name != 'unspecified') {
+                        def dependencyNode = dependenciesNode.appendNode('dependency')
+                        dependencyNode.appendNode('groupId', it.group)
+                        dependencyNode.appendNode('artifactId', it.name)
+                        dependencyNode.appendNode('version', it.version)
+                    }
+                }
+            }
+        }
+    }
+
     repositories {
         maven {
             url = System.getenv("MVN_REPO_URL")
