@@ -20,7 +20,7 @@ allprojects {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 group = 'info.shibafu528.yukari'
 archivesBaseName = 'yukari-exvoice'
@@ -99,11 +99,13 @@ tasks.whenObjectAdded { task ->
 
 clean.dependsOn mrubyClean
 
-uploadArchives {
+publishing {
     repositories {
-        mavenDeployer {
-            repository(url: System.getenv("MVN_REPO_URL")) {
-                authentication(userName: System.getenv("MVN_REPO_USER_NAME"), password: System.getenv("MVN_REPO_PASSWORD"))
+        maven {
+            url = System.getenv("MVN_REPO_URL")
+            credentials {
+                username = System.getenv("MVN_REPO_USER_NAME")
+                password = System.getenv("MVN_REPO_PASSWORD")
             }
         }
     }
