@@ -91,7 +91,6 @@ static mrb_value mrb_printstr(mrb_state *mrb, mrb_value self) {
 }
 
 static void delayer_remain_handler(mrb_state *mrb) {
-    __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "delayer_remain_handler");
     JNIEnv *env = getJNIEnv();
     MRubyInstance *instance = findMRubyInstance(mrb);
     if (instance != NULL) {
@@ -106,7 +105,6 @@ static void delayer_remain_handler(mrb_state *mrb) {
 }
 
 static void delayer_reserve_handler(mrb_state *mrb, mrb_float delay) {
-    __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "delayer_reserve_handler");
     JNIEnv *env = getJNIEnv();
     MRubyInstance *instance = findMRubyInstance(mrb);
     if (instance != NULL) {
@@ -247,7 +245,6 @@ JNIEXPORT void JNICALL Java_info_shibafu528_yukari_exvoice_MRuby_n_1runDelayer(J
             goto cleanup;
         }
     }
-    __android_log_print(ANDROID_LOG_DEBUG, "exvoice", "Delayer.run done");
 
 cleanup:
     mrb_gc_arena_restore(mrb, arenaIndex);

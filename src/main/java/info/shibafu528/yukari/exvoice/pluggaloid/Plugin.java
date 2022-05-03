@@ -2,7 +2,6 @@ package info.shibafu528.yukari.exvoice.pluggaloid;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
@@ -73,8 +72,6 @@ public abstract class Plugin {
      * @param args 引数
      */
     /*package*/ void onEvent(String eventName, Object... args) {
-        Log.d("Plugin", String.format("%s : on_%s", slug, eventName));
-
         PluggaloidEventListener l = listeners.get(eventName);
         if (l != null) {
             l.onEvent(args);
@@ -88,8 +85,6 @@ public abstract class Plugin {
      * @return フィルタされた結果の配列
      */
     /*package*/ Object[] filter(String eventName, Object... args) {
-        Log.d("Plugin", String.format("%s : filter_%s", slug, eventName));
-
         PluggaloidEventFilter f = filters.get(eventName);
         if (f != null) {
             return f.filter(args);
@@ -105,8 +100,6 @@ public abstract class Plugin {
      * @param options キーワード引数
      */
     /*package*/ void onSpell(String callbackKey, Object[] models, Map<String, Object> options) {
-        Log.d("Plugin", String.format("%s : spell %s", slug, callbackKey));
-
         PluggaloidSpellListener l = spells.get(callbackKey);
         if (l != null) {
             l.onSpell(models, options);

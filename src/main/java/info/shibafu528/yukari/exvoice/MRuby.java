@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import info.shibafu528.yukari.exvoice.pluggaloid.Plugin;
 
 import java.io.File;
@@ -166,8 +165,6 @@ public class MRuby {
     public void printStringCallback(String value) {
         if (printCallback != null) {
             printCallback.print(value);
-        } else {
-            Log.d("exvoice(Java)", value);
         }
     }
 
@@ -196,7 +193,6 @@ public class MRuby {
             if (mrubyInstancePointer == 0) {
                 return;
             }
-            Log.d("exvoice(Java)", "delayerRemainCallback() -> n_runDelayer()");
             n_runDelayer(mrubyInstancePointer);
         });
     }
@@ -206,7 +202,6 @@ public class MRuby {
             if (mrubyInstancePointer == 0) {
                 return;
             }
-            Log.d("exvoice(Java)", String.format(Locale.US, "delayerReserveCallback(%.3f) -> n_runDelayer()", delay));
             n_runDelayer(mrubyInstancePointer);
         }, (long) (delay * 1000) + 100); // TODO: なにやら誤差でうまく動かないこともある
     }
