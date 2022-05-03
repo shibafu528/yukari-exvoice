@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.res.AssetManager;
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 import info.shibafu528.yukari.exvoice.pluggaloid.Plugin;
 
 import java.io.File;
@@ -14,6 +13,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.annotation.Nullable;
 
 /**
  * Created by shibafu on 2016/03/28.
@@ -30,6 +33,7 @@ public class MRuby {
     private AssetManager assetManager;
     private PrintCallback printCallback;
     private Map<String, Plugin> plugins = new HashMap<>();
+    private Logger logger;
 
     private ConfigLoader configLoader;
 
@@ -166,8 +170,8 @@ public class MRuby {
     public void printStringCallback(String value) {
         if (printCallback != null) {
             printCallback.print(value);
-        } else {
-            Log.d("exvoice(Java)", value);
+        } else if (logger != null) {
+            logger.log(Level.INFO, value);
         }
     }
 
@@ -191,12 +195,23 @@ public class MRuby {
         return plugins.get(slug);
     }
 
+    @Nullable
+    public Logger getLogger() {
+        return logger;
+    }
+
+    public void setLogger(Logger logger) {
+        this.logger = logger;
+    }
+
     private void delayerRemainCallback() {
         delayerHandler.post(() -> {
             if (mrubyInstancePointer == 0) {
                 return;
             }
-            Log.d("exvoice(Java)", "delayerRemainCallback() -> n_runDelayer()");
+            if (logger != null) {
+                logger.log(Level.FINE, "MRuby.delayerRemainCallback() -> n_runDelayer()");
+            }
             n_runDelayer(mrubyInstancePointer);
         });
     }
@@ -206,7 +221,9 @@ public class MRuby {
             if (mrubyInstancePointer == 0) {
                 return;
             }
-            Log.d("exvoice(Java)", String.format(Locale.US, "delayerReserveCallback(%.3f) -> n_runDelayer()", delay));
+            if (logger != null) {
+                logger.log(Level.FINE, String.format(Locale.US, "MRuby.delayerReserveCallback(%.3f) -> n_runDelayer()", delay));
+            }
             n_runDelayer(mrubyInstancePointer);
         }, (long) (delay * 1000) + 100); // TODO: なにやら誤差でうまく動かないこともある
     }

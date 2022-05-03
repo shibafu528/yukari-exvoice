@@ -2,12 +2,13 @@ package info.shibafu528.yukari.exvoice.pluggaloid;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import info.shibafu528.yukari.exvoice.MRuby;
 import info.shibafu528.yukari.exvoice.MRubyException;
@@ -73,7 +74,10 @@ public abstract class Plugin {
      * @param args 引数
      */
     /*package*/ void onEvent(String eventName, Object... args) {
-        Log.d("Plugin", String.format("%s : on_%s", slug, eventName));
+        Logger logger = mRuby.getLogger();
+        if (logger != null) {
+            logger.log(Level.FINE, String.format("[Plugin] %s : on_%s", slug, eventName));
+        }
 
         PluggaloidEventListener l = listeners.get(eventName);
         if (l != null) {
@@ -88,7 +92,10 @@ public abstract class Plugin {
      * @return フィルタされた結果の配列
      */
     /*package*/ Object[] filter(String eventName, Object... args) {
-        Log.d("Plugin", String.format("%s : filter_%s", slug, eventName));
+        Logger logger = mRuby.getLogger();
+        if (logger != null) {
+            logger.log(Level.FINE, String.format("[Plugin] %s : filter_%s", slug, eventName));
+        }
 
         PluggaloidEventFilter f = filters.get(eventName);
         if (f != null) {
@@ -105,7 +112,10 @@ public abstract class Plugin {
      * @param options キーワード引数
      */
     /*package*/ void onSpell(String callbackKey, Object[] models, Map<String, Object> options) {
-        Log.d("Plugin", String.format("%s : spell %s", slug, callbackKey));
+        Logger logger = mRuby.getLogger();
+        if (logger != null) {
+            logger.log(Level.FINE, String.format("[Plugin] %s : spell %s", slug, callbackKey));
+        }
 
         PluggaloidSpellListener l = spells.get(callbackKey);
         if (l != null) {
